@@ -1,0 +1,15 @@
+[submodule "mbedutils"]
+	path = mbedutils
+	url = https://github.com/brandonbraun653/mbedutils.git
+[submodule "lib/cpputest"]
+	path = lib/cpputest
+	url = https://github.com/cpputest/cpputest.git
+[submodule "lib/mbedutils_pico"]
+	path = lib/mbedutils_pico
+	url = https://github.com/brandonbraun653/mbedutils_pico.git
+[submodule "lib/mbedutils_freertos"]
+	path = lib/mbedutils_freertos
+	url = https://github.com/brandonbraun653/mbedutils_freertos.git
+[submodule "lib/mbedutils_sim"]
+	path = lib/mbedutils_sim
+	url = https://github.com/brandonbraun653/mbedutils_sim.git
