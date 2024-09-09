@@ -16,11 +16,13 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/../mbedutils/src/rpc/proto
     ${PROJECT_SOURCE_DIR}/../lib/cpputest/include
     ${PROJECT_SOURCE_DIR}/../lib/etl/include
+    ${PROJECT_SOURCE_DIR}/expect
 )
 
 # Get the entire set of mbedutils sources
 file(GLOB_RECURSE MBEDUTILS_SOURCES ${PROJECT_SOURCE_DIR}/../mbedutils/src/*.cpp)
-file(GLOB_RECURSE MBEDUTILS_MOCKS ${PROJECT_SOURCE_DIR}/mocks/*.cpp)
+file(GLOB_RECURSE MBEDUTILS_EXPECT ${PROJECT_SOURCE_DIR}/expect/*.cpp)
+file(GLOB_RECURSE MBEDUTILS_MOCK ${PROJECT_SOURCE_DIR}/mock/*.cpp)
 file(GLOB_RECURSE MBEDUTILS_TESTS ${PROJECT_SOURCE_DIR}/src/*.cpp)
 
 # Create a library with the mbedutils sources, mocks, and tests. Enables options to help
@@ -36,7 +38,7 @@ target_link_libraries(MbedutilsDrivers PUBLIC
 )
 
 # Create the test executable
-add_executable(UnitTestMbedutils run_all_tests.cpp ${MBEDUTILS_TESTS} ${MBEDUTILS_MOCKS})
+add_executable(UnitTestMbedutils run_all_tests.cpp ${MBEDUTILS_TESTS} ${MBEDUTILS_MOCK})
 target_link_libraries(UnitTestMbedutils
     CppUTest
     CppUTestExt
@@ -46,7 +48,7 @@ target_link_libraries(UnitTestMbedutils
 )
 
 # Fix annoying linker ordering dependencies that might get introduced
-target_link_options(UnitTestMbedutils PRIVATE -Wl,--start-group)
+# target_link_options(UnitTestMbedutils PRIVATE -Wl,--start-group)
 
 # Add the test to the CMake test suite
 add_test(NAME UnitTestMbedutils COMMAND UnitTestMbedutils)

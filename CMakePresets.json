@@ -1,38 +1,46 @@
 {
     "version": 8,
     "cmakeMinimumRequired": {
-      "major": 3,
-      "minor": 15,
-      "patch": 0
+        "major": 3,
+        "minor": 15,
+        "patch": 0
     },
     "configurePresets": [
-      {
-        "name": "GCC Debug",
-        "hidden": false,
-        "description": "Target host with debug configuration",
-        "generator": "Ninja",
-        "binaryDir": "${sourceDir}/build/host/debug",
-        "cacheVariables": {
-          "CMAKE_BUILD_TYPE": "Debug",
-          "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-          "CMAKE_CXX_STANDARD": "20",
-          "CMAKE_CXX_STANDARD_REQUIRED": "ON",
-          "CMAKE_CXX_EXTENSIONS": "OFF"
+        {
+            "name": "GCC Debug",
+            "hidden": false,
+            "description": "Target host with debug configuration",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/host/debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "CMAKE_CXX_STANDARD": "20",
+                "CMAKE_CXX_STANDARD_REQUIRED": "ON",
+                "CMAKE_CXX_EXTENSIONS": "OFF"
+            }
+        },
+        {
+            "name": "GCC Release",
+            "hidden": false,
+            "description": "Target host with release configuration",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/host/release",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "CMAKE_CXX_STANDARD": "20",
+                "CMAKE_CXX_STANDARD_REQUIRED": "ON",
+                "CMAKE_CXX_EXTENSIONS": "OFF"
+            }
         }
-      },
-      {
-        "name": "GCC Release",
-        "hidden": false,
-        "description": "Target host with release configuration",
-        "generator": "Ninja",
-        "binaryDir": "${sourceDir}/build/host/release",
-        "cacheVariables": {
-          "CMAKE_BUILD_TYPE": "Release",
-          "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-          "CMAKE_CXX_STANDARD": "20",
-          "CMAKE_CXX_STANDARD_REQUIRED": "ON",
-          "CMAKE_CXX_EXTENSIONS": "OFF"
+    ],
+    "testPresets": [
+        {
+            "name": "UnitTests",
+            "description": "",
+            "displayName": "",
+            "configurePreset": "GCC Debug"
         }
-      }
     ]
-  }
+}
