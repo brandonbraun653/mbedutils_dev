@@ -16,3 +16,6 @@
 [submodule "lib/etl"]
 	path = lib/etl
 	url = https://github.com/ETLCPP/etl.git
+[submodule "lib/cppumockgen"]
+	path = lib/cppumockgen
+	url = https://github.com/jgonzalezdr/CppUMockGen.git
