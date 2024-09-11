@@ -17,7 +17,7 @@ bool mb::hw::gpio::intf::init(const mb::hw::gpio::PinConfig & config)
 
 void mb::hw::gpio::intf::write(const mb::hw::gpio::Port_t port, const mb::hw::gpio::Pin_t pin, const mb::hw::gpio::State_t state)
 {
-    mock().actualCall("mb::hw::gpio::intf::write").withUnsignedIntParameter("port", port).withUnsignedIntParameter("pin", pin).withUnsignedIntParameter("state", state);
+    mock().actualCall("mb::hw::gpio::intf::write").withUnsignedIntParameter("port", port).withUnsignedIntParameter("pin", pin).withIntParameter("state", static_cast<int>(state));
 }
 
 void mb::hw::gpio::intf::toggle(const mb::hw::gpio::Port_t port, const mb::hw::gpio::Pin_t pin)
@@ -27,7 +27,7 @@ void mb::hw::gpio::intf::toggle(const mb::hw::gpio::Port_t port, const mb::hw::g
 
 mb::hw::gpio::State_t mb::hw::gpio::intf::read(const mb::hw::gpio::Port_t port, const mb::hw::gpio::Pin_t pin)
 {
-    return static_cast<mb::hw::gpio::State_t>(mock().actualCall("mb::hw::gpio::intf::read").withUnsignedIntParameter("port", port).withUnsignedIntParameter("pin", pin).returnUnsignedIntValue());
+    return static_cast<mb::hw::gpio::State_t>(mock().actualCall("mb::hw::gpio::intf::read").withUnsignedIntParameter("port", port).withUnsignedIntParameter("pin", pin).returnIntValue());
 }
 
 void mb::hw::gpio::intf::setAlternate(const mb::hw::gpio::Port_t port, const mb::hw::gpio::Pin_t pin, const mb::hw::gpio::Alternate_t alternate)

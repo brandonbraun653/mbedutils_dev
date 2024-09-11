@@ -34,3 +34,33 @@ MockExpectedCall& micros(unsigned int __numCalls__, size_t __return__)
 }
 } } }
 
+namespace expect { namespace mb$ { namespace time$ {
+MockExpectedCall& delayMilliseconds(CppUMockGen::Parameter<const size_t> val)
+{
+    return delayMilliseconds(1, val);
+}
+MockExpectedCall& delayMilliseconds(unsigned int __numCalls__, CppUMockGen::Parameter<const size_t> val)
+{
+    bool __ignoreOtherParams__ = false;
+    MockExpectedCall& __expectedCall__ = mock().expectNCalls(__numCalls__, "mb::time::delayMilliseconds");
+    if(val.isIgnored()) { __ignoreOtherParams__ = true; } else { __expectedCall__.withUnsignedLongIntParameter("val", val.getValue()); }
+    if(__ignoreOtherParams__) { __expectedCall__.ignoreOtherParameters(); }
+    return __expectedCall__;
+}
+} } }
+
+namespace expect { namespace mb$ { namespace time$ {
+MockExpectedCall& delayMicroseconds(CppUMockGen::Parameter<const size_t> val)
+{
+    return delayMicroseconds(1, val);
+}
+MockExpectedCall& delayMicroseconds(unsigned int __numCalls__, CppUMockGen::Parameter<const size_t> val)
+{
+    bool __ignoreOtherParams__ = false;
+    MockExpectedCall& __expectedCall__ = mock().expectNCalls(__numCalls__, "mb::time::delayMicroseconds");
+    if(val.isIgnored()) { __ignoreOtherParams__ = true; } else { __expectedCall__.withUnsignedLongIntParameter("val", val.getValue()); }
+    if(__ignoreOtherParams__) { __expectedCall__.ignoreOtherParameters(); }
+    return __expectedCall__;
+}
+} } }
+

@@ -90,3 +90,33 @@ MockExpectedCall& transfer(unsigned int __numCalls__, CppUMockGen::Parameter<con
 }
 } } } } }
 
+namespace expect { namespace mb$ { namespace hw$ { namespace spi$ { namespace intf$ {
+MockExpectedCall& lock(CppUMockGen::Parameter<const mb::hw::spi::Port_t> port)
+{
+    return lock(1, port);
+}
+MockExpectedCall& lock(unsigned int __numCalls__, CppUMockGen::Parameter<const mb::hw::spi::Port_t> port)
+{
+    bool __ignoreOtherParams__ = false;
+    MockExpectedCall& __expectedCall__ = mock().expectNCalls(__numCalls__, "mb::hw::spi::intf::lock");
+    if(port.isIgnored()) { __ignoreOtherParams__ = true; } else { __expectedCall__.withUnsignedIntParameter("port", port.getValue()); }
+    if(__ignoreOtherParams__) { __expectedCall__.ignoreOtherParameters(); }
+    return __expectedCall__;
+}
+} } } } }
+
+namespace expect { namespace mb$ { namespace hw$ { namespace spi$ { namespace intf$ {
+MockExpectedCall& unlock(CppUMockGen::Parameter<const mb::hw::spi::Port_t> port)
+{
+    return unlock(1, port);
+}
+MockExpectedCall& unlock(unsigned int __numCalls__, CppUMockGen::Parameter<const mb::hw::spi::Port_t> port)
+{
+    bool __ignoreOtherParams__ = false;
+    MockExpectedCall& __expectedCall__ = mock().expectNCalls(__numCalls__, "mb::hw::spi::intf::unlock");
+    if(port.isIgnored()) { __ignoreOtherParams__ = true; } else { __expectedCall__.withUnsignedIntParameter("port", port.getValue()); }
+    if(__ignoreOtherParams__) { __expectedCall__.ignoreOtherParameters(); }
+    return __expectedCall__;
+}
+} } } } }
+

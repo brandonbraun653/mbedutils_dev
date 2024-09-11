@@ -35,7 +35,7 @@ MockExpectedCall& write(unsigned int __numCalls__, CppUMockGen::Parameter<const 
     MockExpectedCall& __expectedCall__ = mock().expectNCalls(__numCalls__, "mb::hw::gpio::intf::write");
     if(port.isIgnored()) { __ignoreOtherParams__ = true; } else { __expectedCall__.withUnsignedIntParameter("port", port.getValue()); }
     if(pin.isIgnored()) { __ignoreOtherParams__ = true; } else { __expectedCall__.withUnsignedIntParameter("pin", pin.getValue()); }
-    if(state.isIgnored()) { __ignoreOtherParams__ = true; } else { __expectedCall__.withUnsignedIntParameter("state", state.getValue()); }
+    if(state.isIgnored()) { __ignoreOtherParams__ = true; } else { __expectedCall__.withIntParameter("state", static_cast<int>(state.getValue())); }
     if(__ignoreOtherParams__) { __expectedCall__.ignoreOtherParameters(); }
     return __expectedCall__;
 }
@@ -68,7 +68,7 @@ MockExpectedCall& read(unsigned int __numCalls__, CppUMockGen::Parameter<const m
     MockExpectedCall& __expectedCall__ = mock().expectNCalls(__numCalls__, "mb::hw::gpio::intf::read");
     if(port.isIgnored()) { __ignoreOtherParams__ = true; } else { __expectedCall__.withUnsignedIntParameter("port", port.getValue()); }
     if(pin.isIgnored()) { __ignoreOtherParams__ = true; } else { __expectedCall__.withUnsignedIntParameter("pin", pin.getValue()); }
-    __expectedCall__.andReturnValue(static_cast<unsigned int>(__return__));
+    __expectedCall__.andReturnValue(static_cast<int>(__return__));
     if(__ignoreOtherParams__) { __expectedCall__.ignoreOtherParameters(); }
     return __expectedCall__;
 }

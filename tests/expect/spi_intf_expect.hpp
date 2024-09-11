@@ -37,3 +37,13 @@ MockExpectedCall& transfer(CppUMockGen::Parameter<const mb::hw::spi::Port_t> por
 MockExpectedCall& transfer(unsigned int __numCalls__, CppUMockGen::Parameter<const mb::hw::spi::Port_t> port, CppUMockGen::Parameter<const void *const> tx, CppUMockGen::Parameter<void *const> rx, CppUMockGen::Parameter<const size_t> length);
 } } } } }
 
+namespace expect { namespace mb$ { namespace hw$ { namespace spi$ { namespace intf$ {
+MockExpectedCall& lock(CppUMockGen::Parameter<const mb::hw::spi::Port_t> port);
+MockExpectedCall& lock(unsigned int __numCalls__, CppUMockGen::Parameter<const mb::hw::spi::Port_t> port);
+} } } } }
+
+namespace expect { namespace mb$ { namespace hw$ { namespace spi$ { namespace intf$ {
+MockExpectedCall& unlock(CppUMockGen::Parameter<const mb::hw::spi::Port_t> port);
+MockExpectedCall& unlock(unsigned int __numCalls__, CppUMockGen::Parameter<const mb::hw::spi::Port_t> port);
+} } } } }
+

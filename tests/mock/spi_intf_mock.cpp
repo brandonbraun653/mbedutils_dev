@@ -32,6 +32,20 @@ void mb::hw::spi::intf::read(const mb::hw::spi::Port_t port, void *const data, c
 
 void mb::hw::spi::intf::transfer(const mb::hw::spi::Port_t port, const void *const tx, void *const rx, const size_t length)
 {
-    mock().actualCall("mb::hw::spi::intf::transfer").withUnsignedIntParameter("port", port).withConstPointerParameter("tx", tx).withPointerParameter("rx", rx).withUnsignedLongIntParameter("length", length);
+    mock().actualCall("mb::hw::spi::intf::transfer")
+        .withUnsignedIntParameter("port", port)
+        .withConstPointerParameter("tx", tx)
+        .withOutputParameter("rx", rx)
+        .withUnsignedLongIntParameter("length", length);
+}
+
+void mb::hw::spi::intf::lock(const mb::hw::spi::Port_t port)
+{
+    mock().actualCall("mb::hw::spi::intf::lock").withUnsignedIntParameter("port", port);
+}
+
+void mb::hw::spi::intf::unlock(const mb::hw::spi::Port_t port)
+{
+    mock().actualCall("mb::hw::spi::intf::unlock").withUnsignedIntParameter("port", port);
 }
 

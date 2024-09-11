@@ -20,3 +20,13 @@ size_t mb::time::micros()
     return static_cast<size_t>(mock().actualCall("mb::time::micros").returnUnsignedLongIntValue());
 }
 
+void mb::time::delayMilliseconds(const size_t val)
+{
+    mock().actualCall("mb::time::delayMilliseconds").withUnsignedLongIntParameter("val", val);
+}
+
+void mb::time::delayMicroseconds(const size_t val)
+{
+    mock().actualCall("mb::time::delayMicroseconds").withUnsignedLongIntParameter("val", val);
+}
+

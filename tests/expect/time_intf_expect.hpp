@@ -22,3 +22,13 @@ MockExpectedCall& micros(size_t __return__);
 MockExpectedCall& micros(unsigned int __numCalls__, size_t __return__);
 } } }
 
+namespace expect { namespace mb$ { namespace time$ {
+MockExpectedCall& delayMilliseconds(CppUMockGen::Parameter<const size_t> val);
+MockExpectedCall& delayMilliseconds(unsigned int __numCalls__, CppUMockGen::Parameter<const size_t> val);
+} } }
+
+namespace expect { namespace mb$ { namespace time$ {
+MockExpectedCall& delayMicroseconds(CppUMockGen::Parameter<const size_t> val);
+MockExpectedCall& delayMicroseconds(unsigned int __numCalls__, CppUMockGen::Parameter<const size_t> val);
+} } }
+

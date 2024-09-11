@@ -10,6 +10,7 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/../lib/cpputest ${CMAKE_CURRENT_BINARY_DI
 
 # Include Dependent Headers
 include_directories(
+    ${PROJECT_SOURCE_DIR}/../bin
     ${PROJECT_SOURCE_DIR}/../mbedutils/include
     ${PROJECT_SOURCE_DIR}/../mbedutils/lib/cobs
     ${PROJECT_SOURCE_DIR}/../mbedutils/lib/nanopb
@@ -38,13 +39,16 @@ target_link_libraries(MbedutilsDrivers PUBLIC
 )
 
 # Create the test executable
-add_executable(UnitTestMbedutils run_all_tests.cpp ${MBEDUTILS_TESTS} ${MBEDUTILS_MOCK})
+add_executable(UnitTestMbedutils run_all_tests.cpp ${MBEDUTILS_TESTS} ${MBEDUTILS_MOCK} ${MBEDUTILS_EXPECT})
 target_link_libraries(UnitTestMbedutils
     CppUTest
     CppUTestExt
     gcov
+    etl::etl
     MbedutilsDrivers
     mbedutils_lib_stl
+    mbedutils_headers
+    mbedutils_internal_headers
 )
 
 # Fix annoying linker ordering dependencies that might get introduced
