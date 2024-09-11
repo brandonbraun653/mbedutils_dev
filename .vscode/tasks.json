@@ -1,13 +1,25 @@
 {
-	"version": "2.0.0",
-	"tasks": [
-		{
-			"type": "cmake",
-			"label": "CMake: test",
-			"command": "test",
-			"preset": "${command:cmake.activeTestPresetName}",
-			"problemMatcher": [],
-			"detail": "CMake template test task"
-		}
-	]
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "shell",
+      "label": "Run Unittests",
+      "command": "cmake",
+      "args": [
+        "--build",
+        "${workspaceFolder}/build/host/debug",
+        "--parallel",
+        "14",
+        "--target",
+        "UnitTests"
+      ],
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "problemMatcher": [
+        "$gcc"
+      ]
+    }
+  ]
 }

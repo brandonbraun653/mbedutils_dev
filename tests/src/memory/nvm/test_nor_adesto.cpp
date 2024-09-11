@@ -23,14 +23,21 @@ using namespace mb::memory;
 using namespace mb::memory::nor;
 
 /*-----------------------------------------------------------------------------
+Constants
+-----------------------------------------------------------------------------*/
+
+static constexpr uint16_t at25sf_ready_flag = 0x0000;
+static constexpr uint16_t at25sf_busy_flag  = 0x0001;
+
+/*-----------------------------------------------------------------------------
 Tests
 -----------------------------------------------------------------------------*/
 
 TEST_GROUP( nor_adesto )
 {
   DeviceConfig cfg;
-  uint8_t fake_status_register_byte1[ 3 ];
-  uint8_t fake_status_register_byte2[ 3 ];
+  uint8_t      fake_status_register_byte1[ 3 ][ 3 ];
+  uint8_t      fake_status_register_byte2[ 3 ][ 3 ];
 
   void setup()
   {
@@ -50,11 +57,11 @@ TEST_GROUP( nor_adesto )
 
   void teardown()
   {
-    // mock().checkExpectations();
-    // mock().clear();
+    mock().checkExpectations();
+    mock().clear();
   }
 
-  void setup_static_status_register_return_value( int num_calls, const DeviceConfig &cfg, const uint16_t ret_val )
+  void setup_static_status_register_return_value( const int call_num, const DeviceConfig &cfg, const uint16_t ret_val )
   {
     /*-------------------------------------------------------------------------
     Set the expectations for the transaction
@@ -67,23 +74,23 @@ TEST_GROUP( nor_adesto )
     /*-------------------------------------------------------------------------
     Set the data to be returned for the status register read
     -------------------------------------------------------------------------*/
-    fake_status_register_byte1[ 0 ] = 0x00;   // Dummy byte of the transfer
-    fake_status_register_byte1[ 1 ] = ret_val & 0xFF;
+    fake_status_register_byte1[ call_num ][ 0 ] = 0x00;   // Dummy byte of the transfer
+    fake_status_register_byte1[ call_num ][ 1 ] = ret_val & 0xFF;
 
-    fake_status_register_byte2[ 0 ] = 0x00;   // Dummy byte of the transfer
-    fake_status_register_byte2[ 1 ] = ( ret_val >> 8 ) & 0xFF;
+    fake_status_register_byte2[ call_num ][ 0 ] = 0x00;   // Dummy byte of the transfer
+    fake_status_register_byte2[ call_num ][ 1 ] = ( ret_val >> 8 ) & 0xFF;
 
     /* First call to transfer */
-    mock().expectNCalls( num_calls, "mb::hw::spi::intf::transfer" )
+    mock().expectOneCall( "mb::hw::spi::intf::transfer" )
           .withParameter( "port", cfg.spi_port )
-          .withOutputParameterReturning( "rx", fake_status_register_byte1, 2 )
+          .withOutputParameterReturning( "rx", fake_status_register_byte1[ call_num ], 2 )
           .withParameter( "length", 2 )
           .ignoreOtherParameters();
 
     /* Second call to transfer */
-    mock().expectNCalls( num_calls, "mb::hw::spi::intf::transfer" )
+    mock().expectOneCall( "mb::hw::spi::intf::transfer" )
           .withParameter( "port", cfg.spi_port )
-          .withOutputParameterReturning( "rx", fake_status_register_byte2, 2 )
+          .withOutputParameterReturning( "rx", fake_status_register_byte2[ call_num ], 2 )
           .withParameter( "length", 2 )
           .ignoreOtherParameters();
   }
@@ -104,7 +111,7 @@ TEST( nor_adesto, at25sfxxx_pend_event__device_is_not_busy )
   ---------------------------------------------------------------------------*/
   expect::mb$::time$::millis( 1, 100 );
 
-  this->setup_static_status_register_return_value( 1, cfg, 0x0000 );
+  this->setup_static_status_register_return_value( 0, cfg, at25sf_ready_flag );
 
   /*---------------------------------------------------------------------------
   Call FUT
@@ -117,3 +124,55 @@ TEST( nor_adesto, at25sfxxx_pend_event__device_is_not_busy )
   CHECK( result == Status::ERR_OK );
 }
 
+
+TEST( nor_adesto, at25sfxx_pend_event__device_busy_timeout )
+{
+  /*---------------------------------------------------------------------------
+  Initialize
+  ---------------------------------------------------------------------------*/
+  expect::mb$::time$::millis( 1, 100 ); // Initializes start time
+  expect::mb$::time$::millis( 1, 110 ); // Cause a second iteration
+  expect::mb$::time$::millis( 1, 150 ); // Causes the timeout to occur
+
+  mock().expectOneCall( "mb::time::delayMilliseconds" ).ignoreOtherParameters();
+
+  this->setup_static_status_register_return_value( 0, cfg, at25sf_busy_flag );
+  this->setup_static_status_register_return_value( 1, cfg, at25sf_busy_flag );
+
+  /*---------------------------------------------------------------------------
+  Call FUT
+  ---------------------------------------------------------------------------*/
+  auto result = device::adesto_at25sfxxx_pend_event( cfg, Event::MEM_ERASE_COMPLETE, 25 );
+
+  /*---------------------------------------------------------------------------
+  Verify
+  ---------------------------------------------------------------------------*/
+  CHECK( result == Status::ERR_TIMEOUT );
+}
+
+
+TEST( nor_adesto, at25sfxx_pend_event__device_busy_then_ready )
+{
+  /*---------------------------------------------------------------------------
+  Initialize
+  ---------------------------------------------------------------------------*/
+  expect::mb$::time$::millis( 1, 100 ); // Initializes start time
+  expect::mb$::time$::millis( 1, 110 ); // Cause a second iteration
+  expect::mb$::time$::millis( 1, 120 ); // Cause a third iteration
+
+  mock().expectNCalls( 2, "mb::time::delayMilliseconds" ).ignoreOtherParameters();
+
+  this->setup_static_status_register_return_value( 0, cfg, at25sf_busy_flag );
+  this->setup_static_status_register_return_value( 1, cfg, at25sf_busy_flag );
+  this->setup_static_status_register_return_value( 2, cfg, at25sf_ready_flag );
+
+  /*---------------------------------------------------------------------------
+  Call FUT
+  ---------------------------------------------------------------------------*/
+  auto result = device::adesto_at25sfxxx_pend_event( cfg, Event::MEM_WRITE_COMPLETE, 50 );
+
+  /*---------------------------------------------------------------------------
+  Verify
+  ---------------------------------------------------------------------------*/
+  CHECK( result == Status::ERR_OK );
+}
