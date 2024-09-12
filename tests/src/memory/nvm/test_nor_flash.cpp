@@ -18,6 +18,7 @@ Includes
 
 using namespace mb::memory::nor;
 
+
 /*-----------------------------------------------------------------------------
 Tests
 -----------------------------------------------------------------------------*/
@@ -36,7 +37,7 @@ TEST_GROUP( nor_flash )
 };
 
 
-TEST( nor_flash, test_nor_flash )
+TEST( nor_flash, test_transfer )
 {
-  CHECK( true );
+
 }

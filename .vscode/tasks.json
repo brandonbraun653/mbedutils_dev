@@ -20,6 +20,18 @@
       "problemMatcher": [
         "$gcc"
       ]
+    },
+    {
+      "type": "shell",
+      "label": "Generate Mock/Expect (Current File)",
+      "command": "${workspaceFolder}/scripts/generate_mock_expect.sh",
+      "args": [
+        "${file}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/scripts"
+      },
+      "problemMatcher": []
     }
   ]
 }
