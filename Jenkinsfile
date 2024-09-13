@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Initialize Repository') {
             steps {
-                ./update_submodules.sh
+                shell('git submodule update --init --recursive')
             }
         }
     }
