@@ -11,6 +11,8 @@ RUN apt-get update && \
     clang \
     clang-format \
     cmake \
+    cpputest \
+    curl \
     doxygen \
     g++ \
     gcc \
