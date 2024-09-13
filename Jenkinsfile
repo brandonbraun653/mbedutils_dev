@@ -2,9 +2,9 @@ pipeline {
     agent any
 
     stages {
-        stage('Hello') {
+        stage('Initialize Repository') {
             steps {
-                echo 'Hello, World!'
+                ./update_submodules.sh
             }
         }
     }
