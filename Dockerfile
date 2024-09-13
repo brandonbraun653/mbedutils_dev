@@ -1,5 +1,5 @@
 # Use the latest Ubuntu image
-FROM ubuntu:latest
+FROM ubuntu:24.04
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
@@ -13,6 +13,7 @@ RUN apt-get update && \
     cmake \
     cpputest \
     curl \
+    default-jdk \
     doxygen \
     g++ \
     gcc \
@@ -36,13 +37,6 @@ RUN wget $ARM_GCC_URL -O /tmp/arm-none-eabi-gcc.tar.gz && \
 
 # Set the working directory
 WORKDIR /workspace
-
-# Clone the mbedutils_dev repository
-RUN git clone https://github.com/brandonbraun653/mbedutils_dev.git /workspace/mbedutils_dev
-# Checkout the main branch
-RUN cd /workspace/mbedutils_dev && git checkout main
-# Update all the submodules recursively
-RUN cd /workspace/mbedutils_dev && git submodule update --init --recursive || true
 
 # Default command
 CMD ["/bin/bash"]

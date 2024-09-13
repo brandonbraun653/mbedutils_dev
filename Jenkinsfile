@@ -1,10 +1,9 @@
 pipeline {
-    agent any
-
+    agent { dockerfile true }
     stages {
         stage('Initialize Repository') {
             steps {
-                sh './update_submodules.sh'
+                sh 'cd /workspace/mbedutils_dev && git submodule update --init --recursive || true'
             }
         }
     }
