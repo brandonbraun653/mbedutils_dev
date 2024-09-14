@@ -1,3 +1,9 @@
+
+# Ignored messages...
+# This is output from CMake during configuration. Not an issue.
+ok /Performing Test/
+ok /MemoryLeakWarningPlugin.cpp/
+
 # Info messages...
 info /INFO/
 
@@ -8,8 +14,3 @@ warning /WARNING/
 # Error messages...
 error /(?i)^error /
 error /ERROR/
-
-# Ignored messages...
-# This is output from CMake during configuration. Not an issue.
-ok /Performing Test/
-ok /MemoryLeakWarningPlugin.cpp/
