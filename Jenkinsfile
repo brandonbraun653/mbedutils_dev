@@ -25,22 +25,27 @@ pipeline {
     }
     post {
         always {
-            junit 'build/host/debug/coverage/junit_results.xml'
+            junit('build/host/debug/coverage/junit_results.xml')
 
-            publishHTML target: [
-                allowMissing: false,
-                alwaysLinkToLastBuild: false,
-                keepAll: true,
-                reportDir: 'build/host/debug/coverage',
-                reportFiles: 'index.html',
-                reportName: 'Code Coverage Report'
-            ]
+            publishHTML(
+                target: [
+                    allowMissing: false,
+                    alwaysLinkToLastBuild: false,
+                    keepAll: true,
+                    reportDir: 'build/host/debug/coverage',
+                    reportFiles: 'index.html',
+                    reportName: 'Code Coverage Report'
+                ]
+            )
 
-            logParser failBuildOnError: true,
-                      unstableOnWarning: true,
-                      parsingRulesPath: 'jenkins-log-parser-rules.txt',
-                      useProjectRule: true,
-                      showGraphs: true
+            logParser(
+                parsingRulesPath: 'jenkins-log-parser-rules.txt',
+                projectRulePath: 'jenkins-log-parser-rules.txt',
+                failBuildOnError: true,
+                unstableOnWarning: true,
+                useProjectRule: true,
+                showGraphs: true
+            )
         }
     }
 }
