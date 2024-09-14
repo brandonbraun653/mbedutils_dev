@@ -35,5 +35,12 @@ pipeline {
                 reportName: 'Code Coverage Report'
             ]
         }
+        always {
+            logParser failBuildOnError: true,
+                      unstableOnWarning: true,
+                      projectRulePath: 'jenkins-log-parser-rules.txt'
+                      useProjectRule: true,
+                      showGraphs: true
+        }
     }
 }
