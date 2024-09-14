@@ -23,7 +23,7 @@ find_program(GENHTML_PATH genhtml)
 set(ARCHIVE_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/archive)
 set(COVERAGE_OUTPUT_DIR ${ARCHIVE_OUTPUT_DIR}/coverage)
 add_custom_target(UnitTests
-  COMMAND ${CMAKE_MAKE_PROGRAM} UnitTestMbedutils
+  COMMAND ${CMAKE_MAKE_PROGRAM} BuildAllTests
   COMMAND mkdir -p "${ARCHIVE_OUTPUT_DIR}"
   COMMAND mkdir -p "${COVERAGE_OUTPUT_DIR}"
   COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_BINARY_DIR} ctest --output-on-failure --no-compress-output --output-junit ${ARCHIVE_OUTPUT_DIR}/junit_results.xml

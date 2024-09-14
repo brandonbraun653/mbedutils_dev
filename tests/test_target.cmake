@@ -47,7 +47,7 @@ function(create_test_target)
   # The name your project should reference
   #----------------------------------------------------------
   set(exe_target_name "${TEST_EXE_TARGET}")
-  message("-- Generating target: ${exe_target_name}")
+  message("-- Generating test target: ${exe_target_name}")
 
   #----------------------------------------------------------
   # Create the instrumented library
@@ -62,6 +62,7 @@ function(create_test_target)
   # Create the interface library with the desired properties
   #----------------------------------------------------------
   add_executable(${exe_target_name} ${TEST_EXE_TEST_SOURCES} ${TEST_EXE_DEPENDENT_SOURCES})
+  target_link_options(${exe_target_name} PRIVATE -Wl,--start-group)
   target_link_libraries(${exe_target_name} PRIVATE ${exe_target_name}_instrumented)
 
   # Include Paths

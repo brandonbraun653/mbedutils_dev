@@ -13,7 +13,9 @@ Includes
 -----------------------------------------------------------------------------*/
 #include <mbedutils/drivers/threading/thread.hpp>
 #include <mbedutils/drivers/memory/nvm/nor_flash.hpp>
+#include <mbedutils/drivers/memory/nvm/nor_flash_device.hpp>
 
+#include "CppUTest/CommandLineTestRunner.h"
 #include "CppUTest/TestHarness.h"
 #include "gpio_intf_expect.hpp"
 #include "spi_intf_expect.hpp"
@@ -32,6 +34,12 @@ static constexpr uint16_t at25sf_busy_flag  = 0x0001;
 /*-----------------------------------------------------------------------------
 Tests
 -----------------------------------------------------------------------------*/
+
+int main(int argc, char **argv)
+{
+    return RUN_ALL_TESTS(argc, argv);
+}
+
 
 TEST_GROUP( nor_adesto )
 {

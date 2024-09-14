@@ -10,7 +10,7 @@ endif()
 add_subdirectory(${PROJECT_SOURCE_DIR}/../lib/cpputest ${CMAKE_CURRENT_BINARY_DIR}/cpputest)
 
 # Include Dependent Headers
-set(INCLUDE_DIRECTORIES
+set(TESTING_INCLUDE_DIRECTORIES
     ${PROJECT_SOURCE_DIR}/../mbedutils/include
     ${PROJECT_SOURCE_DIR}/../mbedutils/lib/cobs
     ${PROJECT_SOURCE_DIR}/../mbedutils/lib/nanopb
@@ -21,26 +21,8 @@ set(INCLUDE_DIRECTORIES
     ${PROJECT_SOURCE_DIR}/mock
 )
 
-create_test_target(
-    TARGET
-        UnitTestMbedutils
-    TEST_SOURCES
-        run_all_tests.cpp
-        src/memory/nvm/test_nor_adesto.cpp
-    INSTRUMENTED_SOURCES
-        ${PROJECT_SOURCE_DIR}/../mbedutils/src/memory/nvm/nor_adesto.cpp
-    DEPENDENT_SOURCES
-        ${PROJECT_SOURCE_DIR}/mock/gpio_intf_mock.cpp
-        ${PROJECT_SOURCE_DIR}/mock/spi_intf_mock.cpp
-        ${PROJECT_SOURCE_DIR}/mock/time_intf_mock.cpp
-        ${PROJECT_SOURCE_DIR}/expect/gpio_intf_expect.cpp
-        ${PROJECT_SOURCE_DIR}/expect/spi_intf_expect.cpp
-        ${PROJECT_SOURCE_DIR}/expect/time_intf_expect.cpp
-    INCLUDE_DIRS
-        ${INCLUDE_DIRECTORIES}
-    LIBRARIES
-        mbedutils_lib_stl
-        mbedutils_headers
-        mbedutils_internal_headers
-    EXPORT_DIR ${CMAKE_CURRENT_BINARY_DIR}
-)
+add_subdirectory(src/memory/nvm/test_nor_adesto)
+add_subdirectory(src/memory/nvm/test_nor_flash)
+
+add_custom_target(BuildAllTests)
+add_dependencies(BuildAllTests TestNorAdesto TestNorFlash)
