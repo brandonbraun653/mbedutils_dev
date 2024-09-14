@@ -26,6 +26,7 @@ pipeline {
     post {
         always {
             junit 'build/host/debug/coverage/junit_results.xml'
+
             publishHTML target: [
                 allowMissing: false,
                 alwaysLinkToLastBuild: false,
@@ -34,11 +35,10 @@ pipeline {
                 reportFiles: 'index.html',
                 reportName: 'Code Coverage Report'
             ]
-        }
-        always {
+
             logParser failBuildOnError: true,
                       unstableOnWarning: true,
-                      projectRulePath: 'jenkins-log-parser-rules.txt',
+                      parsingRulesPath: 'jenkins-log-parser-rules.txt',
                       useProjectRule: true,
                       showGraphs: true
         }
