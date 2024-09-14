@@ -3,6 +3,7 @@
 ok /Performing Test/
 ok /CMake Deprecation Warning/
 ok /MemoryLeakWarningPlugin.cpp/
+ok /Commit message:/
 
 # Info messages...
 info /INFO/
