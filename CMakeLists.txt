@@ -24,8 +24,9 @@ set(COVERAGE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/coverage)
 add_custom_target(UnitTests
   COMMAND ${CMAKE_MAKE_PROGRAM} UnitTestMbedutils
   COMMAND mkdir -p "${COVERAGE_OUTPUT_DIRECTORY}"
-  COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_BINARY_DIR} ctest --output-on-failure
+  COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_BINARY_DIR} ctest --output-on-failure --no-compress-output --output-junit ${COVERAGE_OUTPUT_DIRECTORY}/junit_results.xml
   COMMAND ${GCOVR_PATH} -r ${CMAKE_CURRENT_SOURCE_DIR}/mbedutils/src --object-directory=${CMAKE_CURRENT_BINARY_DIR} --html-details -o ${COVERAGE_OUTPUT_DIRECTORY}/coverage.html
   COMMAND echo "Coverage report generated at ${COVERAGE_OUTPUT_DIRECTORY}/coverage.html"
+  COMMAND echo "JUnit test results generated at ${COVERAGE_OUTPUT_DIRECTORY}/junit_results.xml"
   WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
 )

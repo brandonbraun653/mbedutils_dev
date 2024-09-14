@@ -16,11 +16,24 @@ pipeline {
         }
         stage('Export Artifacts') {
             steps {
-                archiveArtifacts artifacts: '$(pwd)/build/host/debug/coverage/*',
+                archiveArtifacts artifacts: 'build/host/debug/coverage/*',
                                 allowEmptyArchive: true,
                                 onlyIfSuccessful: true,
                                 fingerprint: true
             }
+        }
+    }
+    post {
+        always {
+            junit 'build/host/debug/coverage/junit_results.xml'
+            publishHTML target: [
+                allowMissing: false,
+                alwaysLinkToLastBuild: false,
+                keepAll: true,
+                reportDir: 'build/host/debug/coverage',
+                reportFiles: 'index.html',
+                reportName: 'Code Coverage Report'
+            ]
         }
     }
 }
