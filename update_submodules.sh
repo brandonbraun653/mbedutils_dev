@@ -10,6 +10,10 @@ echo "Updating CppUTest"
 cd $PRJ_ROOT/lib/cpputest
 git submodule update --init --recursive
 
+echo "Updating CppUMockGen"
+cd $PRJ_ROOT/lib/cppumockgen
+git submodule update --init --recursive
+
 echo "Updating Mbedutils"
 cd $PRJ_ROOT/mbedutils
 git submodule update --init
