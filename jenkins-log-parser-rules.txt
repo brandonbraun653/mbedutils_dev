@@ -1,7 +1,7 @@
 
 # Ignored messages...
-# This is output from CMake during configuration. Not an issue.
 ok /Performing Test/
+ok /CMake Deprecation Warning/
 ok /MemoryLeakWarningPlugin.cpp/
 
 # Info messages...
