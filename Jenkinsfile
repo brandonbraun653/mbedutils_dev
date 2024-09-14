@@ -3,7 +3,7 @@ pipeline {
     stages {
         stage('Initialize Repository') {
             steps {
-                sh 'cd /workspace/mbedutils_dev'
+                sh 'echo $pwd'
                 sh './update_submodules.sh'
                 sh 'cd scripts && ./build_cppumockgen.sh'
             }
