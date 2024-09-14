@@ -16,12 +16,10 @@ pipeline {
         }
         stage('Export Artifacts') {
             steps {
-                dir('artifacts/coverage') {
-                    archiveArtifacts artifacts: '$(pwd)/build/host/debug/coverage/*',
-                                    allowEmptyArchive: true,
-                                    onlyIfSuccessful: true,
-                                    fingerprint: true
-                }
+                archiveArtifacts artifacts: '$(pwd)/build/host/debug/coverage/*',
+                                allowEmptyArchive: true,
+                                onlyIfSuccessful: true,
+                                fingerprint: true
             }
         }
     }
