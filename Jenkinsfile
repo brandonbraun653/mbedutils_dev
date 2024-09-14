@@ -16,7 +16,7 @@ pipeline {
         }
         stage('Export Artifacts') {
             steps {
-                archiveArtifacts artifacts: 'build/host/debug/coverage/*',
+                archiveArtifacts artifacts: 'build/host/debug/archive/*',
                                 allowEmptyArchive: true,
                                 onlyIfSuccessful: true,
                                 fingerprint: true
@@ -32,7 +32,7 @@ pipeline {
                     allowMissing: false,
                     alwaysLinkToLastBuild: false,
                     keepAll: true,
-                    reportDir: 'build/host/debug/coverage',
+                    reportDir: 'coverage',
                     reportFiles: 'index.html',
                     reportName: 'Code Coverage Report'
                 ]

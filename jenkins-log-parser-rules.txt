@@ -1,3 +1,14 @@
+# Info messages...
 info /INFO/
+
+# Warning messages...
+warning /[Ww]arning/
 warning /WARNING/
+
+# Error messages...
+error /(?i)^error /
 error /ERROR/
+
+# Ignored messages...
+# This is output from CMake during configuration. Not an issue.
+ok /-- Performing Test WARNING/
