@@ -83,7 +83,7 @@ MockExpectedCall& transfer(unsigned int __numCalls__, CppUMockGen::Parameter<con
     MockExpectedCall& __expectedCall__ = mock().expectNCalls(__numCalls__, "mb::hw::spi::intf::transfer");
     if(port.isIgnored()) { __ignoreOtherParams__ = true; } else { __expectedCall__.withUnsignedIntParameter("port", port.getValue()); }
     if(tx.isIgnored()) { __ignoreOtherParams__ = true; } else { __expectedCall__.withConstPointerParameter("tx", tx.getValue()); }
-    if(rx.isIgnored()) { __ignoreOtherParams__ = true; } else { __expectedCall__.withPointerParameter("rx", rx.getValue()); }
+    if(rx.isIgnored()) { __ignoreOtherParams__ = true; } else { __expectedCall__.withOutputParameterReturning("rx", rx.getValue(), sizeof( rx.getValue() ) ); }
     if(length.isIgnored()) { __ignoreOtherParams__ = true; } else { __expectedCall__.withUnsignedLongIntParameter("length", length.getValue()); }
     if(__ignoreOtherParams__) { __expectedCall__.ignoreOtherParameters(); }
     return __expectedCall__;
