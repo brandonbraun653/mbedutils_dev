@@ -25,7 +25,7 @@ pipeline {
     }
     post {
         always {
-            junit('build/host/debug/coverage/junit_results.xml')
+            junit('build/host/debug/archive/junit_results.xml')
 
             publishHTML(
                 target: [
