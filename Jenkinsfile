@@ -26,7 +26,7 @@ pipeline {
     }
     post {
         always {
-            junit('artifacts/junit_results.xml')
+            junit 'artifacts/junit_results.xml'
 
             publishHTML(
                 target: [
