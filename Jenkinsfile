@@ -26,16 +26,16 @@ pipeline {
     }
     post {
         always {
-            junit 'artifacts/junit_results.xml'
+            junit('build/host/debug/archive/junit_results.xml')
 
             publishHTML(
                 target: [
                     allowMissing: false,
                     alwaysLinkToLastBuild: false,
                     keepAll: true,
-                    reportDir: 'artifacts/coverage',
+                    reportDir: 'build/host/debug/archive/coverage',
                     reportFiles: 'index.html',
-                    reportName: 'Code Coverage Report'
+                    reportName: 'Latest Test Code Coverage Report'
                 ]
             )
 
