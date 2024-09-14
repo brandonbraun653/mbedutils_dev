@@ -11,4 +11,5 @@ error /ERROR/
 
 # Ignored messages...
 # This is output from CMake during configuration. Not an issue.
-ok /-- Performing Test WARNING/
+ok /Performing Test/
+ok /MemoryLeakWarningPlugin.cpp/
