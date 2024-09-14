@@ -38,7 +38,7 @@ pipeline {
         always {
             logParser failBuildOnError: true,
                       unstableOnWarning: true,
-                      projectRulePath: 'jenkins-log-parser-rules.txt'
+                      projectRulePath: 'jenkins-log-parser-rules.txt',
                       useProjectRule: true,
                       showGraphs: true
         }
