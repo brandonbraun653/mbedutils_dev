@@ -11,9 +11,10 @@
 #ifndef MBEDUTILS_TESTING_FDB_CFG_H
 #define MBEDUTILS_TESTING_FDB_CFG_H
 
-/*-----------------------------------------------------------------------------
-Includes
------------------------------------------------------------------------------*/
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*-----------------------------------------------------------------------------
 Using Key-Value Database feature
 -----------------------------------------------------------------------------*/
@@ -30,7 +31,12 @@ Using flash abstraction layer
 -----------------------------------------------------------------------------*/
 #define FDB_WRITE_GRAN 1
 #define FDB_USING_FAL_MODE
+#define FAL_PART_HAS_TABLE_CFG
 
 #define FDB_PRINT(...)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  /* MBEDUTILS_TESTING_FDB_CFG_H */

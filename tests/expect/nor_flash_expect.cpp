@@ -8,24 +8,6 @@
 
 #include "nor_flash_expect.hpp"
 
-namespace expect { namespace mb$ { namespace memory$ { namespace nor$ { namespace device$ {
-MockExpectedCall& adesto_at25sfxxx_pend_event(CppUMockGen::Parameter<const mb::memory::nor::DeviceConfig &> cfg, CppUMockGen::Parameter<const mb::memory::nor::Event> event, CppUMockGen::Parameter<const size_t> timeout, mb::memory::Status __return__)
-{
-    return adesto_at25sfxxx_pend_event(1, cfg, event, timeout, __return__);
-}
-MockExpectedCall& adesto_at25sfxxx_pend_event(unsigned int __numCalls__, CppUMockGen::Parameter<const mb::memory::nor::DeviceConfig &> cfg, CppUMockGen::Parameter<const mb::memory::nor::Event> event, CppUMockGen::Parameter<const size_t> timeout, mb::memory::Status __return__)
-{
-    bool __ignoreOtherParams__ = false;
-    MockExpectedCall& __expectedCall__ = mock().expectNCalls(__numCalls__, "mb::memory::nor::device::adesto_at25sfxxx_pend_event");
-    if(cfg.isIgnored()) { __ignoreOtherParams__ = true; } else { __expectedCall__.withParameterOfType("mb::memory::nor::DeviceConfig", "cfg", &cfg.getValue()); }
-    if(event.isIgnored()) { __ignoreOtherParams__ = true; } else { __expectedCall__.withIntParameter("event", static_cast<int>(event.getValue())); }
-    if(timeout.isIgnored()) { __ignoreOtherParams__ = true; } else { __expectedCall__.withUnsignedLongIntParameter("timeout", timeout.getValue()); }
-    __expectedCall__.andReturnValue(static_cast<int>(__return__));
-    if(__ignoreOtherParams__) { __expectedCall__.ignoreOtherParameters(); }
-    return __expectedCall__;
-}
-} } } } }
-
 namespace expect { namespace mb$ { namespace memory$ { namespace nor$ { namespace DeviceDriver$ {
 MockExpectedCall& DeviceDriver$ctor()
 {
@@ -130,6 +112,24 @@ MockExpectedCall& read(unsigned int __numCalls__, CppUMockGen::Parameter<const m
 } } } } }
 
 namespace expect { namespace mb$ { namespace memory$ { namespace nor$ { namespace DeviceDriver$ {
+MockExpectedCall& erase(CppUMockGen::Parameter<const mb::memory::nor::DeviceDriver*> __object__, CppUMockGen::Parameter<const uint64_t> address, CppUMockGen::Parameter<const size_t> size, mb::memory::Status __return__)
+{
+    return erase(1, __object__, address, size, __return__);
+}
+MockExpectedCall& erase(unsigned int __numCalls__, CppUMockGen::Parameter<const mb::memory::nor::DeviceDriver*> __object__, CppUMockGen::Parameter<const uint64_t> address, CppUMockGen::Parameter<const size_t> size, mb::memory::Status __return__)
+{
+    bool __ignoreOtherParams__ = false;
+    MockExpectedCall& __expectedCall__ = mock().expectNCalls(__numCalls__, "mb::memory::nor::DeviceDriver::erase");
+    if(!__object__.isIgnored()) { __expectedCall__.onObject(const_cast<mb::memory::nor::DeviceDriver*>(__object__.getValue())); }
+    if(address.isIgnored()) { __ignoreOtherParams__ = true; } else { __expectedCall__.withUnsignedLongIntParameter("address", address.getValue()); }
+    if(size.isIgnored()) { __ignoreOtherParams__ = true; } else { __expectedCall__.withUnsignedLongIntParameter("size", size.getValue()); }
+    __expectedCall__.andReturnValue(static_cast<int>(__return__));
+    if(__ignoreOtherParams__) { __expectedCall__.ignoreOtherParameters(); }
+    return __expectedCall__;
+}
+} } } } }
+
+namespace expect { namespace mb$ { namespace memory$ { namespace nor$ { namespace DeviceDriver$ {
 MockExpectedCall& erase(CppUMockGen::Parameter<const mb::memory::nor::DeviceDriver*> __object__, CppUMockGen::Parameter<const size_t> block_idx, mb::memory::Status __return__)
 {
     return erase(1, __object__, block_idx, __return__);
@@ -204,11 +204,11 @@ MockExpectedCall& close(unsigned int __numCalls__, CppUMockGen::Parameter<const 
 } } } } }
 
 namespace expect { namespace mb$ { namespace memory$ { namespace nor$ { namespace DeviceDriver$ {
-MockExpectedCall& transfer(CppUMockGen::Parameter<const mb::memory::nor::DeviceDriver*> __object__, CppUMockGen::Parameter<const void *const> cmd, CppUMockGen::Parameter<void *const> output, CppUMockGen::Parameter<const size_t> size)
+MockExpectedCall& transfer(CppUMockGen::Parameter<const mb::memory::nor::DeviceDriver*> __object__, CppUMockGen::Parameter<const void *const> cmd, CppUMockGen::Parameter<void *const> output, CppUMockGen::Parameter<const size_t> size, mb::memory::Status __return__)
 {
-    return transfer(1, __object__, cmd, output, size);
+    return transfer(1, __object__, cmd, output, size, __return__);
 }
-MockExpectedCall& transfer(unsigned int __numCalls__, CppUMockGen::Parameter<const mb::memory::nor::DeviceDriver*> __object__, CppUMockGen::Parameter<const void *const> cmd, CppUMockGen::Parameter<void *const> output, CppUMockGen::Parameter<const size_t> size)
+MockExpectedCall& transfer(unsigned int __numCalls__, CppUMockGen::Parameter<const mb::memory::nor::DeviceDriver*> __object__, CppUMockGen::Parameter<const void *const> cmd, CppUMockGen::Parameter<void *const> output, CppUMockGen::Parameter<const size_t> size, mb::memory::Status __return__)
 {
     bool __ignoreOtherParams__ = false;
     MockExpectedCall& __expectedCall__ = mock().expectNCalls(__numCalls__, "mb::memory::nor::DeviceDriver::transfer");
@@ -216,6 +216,7 @@ MockExpectedCall& transfer(unsigned int __numCalls__, CppUMockGen::Parameter<con
     if(cmd.isIgnored()) { __ignoreOtherParams__ = true; } else { __expectedCall__.withConstPointerParameter("cmd", cmd.getValue()); }
     if(output.isIgnored()) { __ignoreOtherParams__ = true; } else { __expectedCall__.withPointerParameter("output", output.getValue()); }
     if(size.isIgnored()) { __ignoreOtherParams__ = true; } else { __expectedCall__.withUnsignedLongIntParameter("size", size.getValue()); }
+    __expectedCall__.andReturnValue(static_cast<int>(__return__));
     if(__ignoreOtherParams__) { __expectedCall__.ignoreOtherParameters(); }
     return __expectedCall__;
 }

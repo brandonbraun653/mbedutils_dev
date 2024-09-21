@@ -10,11 +10,6 @@
 
 #include <CppUTestExt/MockSupport.h>
 
-mb::memory::Status mb::memory::nor::device::adesto_at25sfxxx_pend_event(const mb::memory::nor::DeviceConfig & cfg, const mb::memory::nor::Event event, const size_t timeout)
-{
-    return static_cast<mb::memory::Status>(mock().actualCall("mb::memory::nor::device::adesto_at25sfxxx_pend_event").withParameterOfType("mb::memory::nor::DeviceConfig", "cfg", &cfg).withIntParameter("event", static_cast<int>(event)).withUnsignedLongIntParameter("timeout", timeout).returnIntValue());
-}
-
 mb::memory::nor::DeviceDriver::DeviceDriver()
 {
     mock().actualCall("mb::memory::nor::DeviceDriver::DeviceDriver");
@@ -45,6 +40,11 @@ mb::memory::Status mb::memory::nor::DeviceDriver::read(const uint64_t address, v
     return static_cast<mb::memory::Status>(mock().actualCall("mb::memory::nor::DeviceDriver::read").onObject(this).withUnsignedLongIntParameter("address", address).withPointerParameter("data", data).withUnsignedLongIntParameter("length", length).returnIntValue());
 }
 
+mb::memory::Status mb::memory::nor::DeviceDriver::erase(const uint64_t address, const size_t size)
+{
+    return static_cast<mb::memory::Status>(mock().actualCall("mb::memory::nor::DeviceDriver::erase").onObject(this).withUnsignedLongIntParameter("address", address).withUnsignedLongIntParameter("size", size).returnIntValue());
+}
+
 mb::memory::Status mb::memory::nor::DeviceDriver::erase(const size_t block_idx)
 {
     return static_cast<mb::memory::Status>(mock().actualCall("mb::memory::nor::DeviceDriver::erase").onObject(this).withUnsignedLongIntParameter("block_idx", block_idx).returnIntValue());
@@ -70,8 +70,8 @@ void mb::memory::nor::DeviceDriver::close()
     mock().actualCall("mb::memory::nor::DeviceDriver::close").onObject(this);
 }
 
-void mb::memory::nor::DeviceDriver::transfer(const void *const cmd, void *const output, const size_t size)
+mb::memory::Status mb::memory::nor::DeviceDriver::transfer(const void *const cmd, void *const output, const size_t size)
 {
-    mock().actualCall("mb::memory::nor::DeviceDriver::transfer").onObject(this).withConstPointerParameter("cmd", cmd).withPointerParameter("output", output).withUnsignedLongIntParameter("size", size);
+    return static_cast<mb::memory::Status>(mock().actualCall("mb::memory::nor::DeviceDriver::transfer").onObject(this).withConstPointerParameter("cmd", cmd).withPointerParameter("output", output).withUnsignedLongIntParameter("size", size).returnIntValue());
 }
 

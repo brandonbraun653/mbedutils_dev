@@ -12,11 +12,6 @@
 
 #include <CppUTestExt/MockSupport.h>
 
-namespace expect { namespace mb$ { namespace memory$ { namespace nor$ { namespace device$ {
-MockExpectedCall& adesto_at25sfxxx_pend_event(CppUMockGen::Parameter<const mb::memory::nor::DeviceConfig &> cfg, CppUMockGen::Parameter<const mb::memory::nor::Event> event, CppUMockGen::Parameter<const size_t> timeout, mb::memory::Status __return__);
-MockExpectedCall& adesto_at25sfxxx_pend_event(unsigned int __numCalls__, CppUMockGen::Parameter<const mb::memory::nor::DeviceConfig &> cfg, CppUMockGen::Parameter<const mb::memory::nor::Event> event, CppUMockGen::Parameter<const size_t> timeout, mb::memory::Status __return__);
-} } } } }
-
 namespace expect { namespace mb$ { namespace memory$ { namespace nor$ { namespace DeviceDriver$ {
 MockExpectedCall& DeviceDriver$ctor();
 MockExpectedCall& DeviceDriver$ctor(unsigned int __numCalls__);
@@ -48,6 +43,11 @@ MockExpectedCall& read(unsigned int __numCalls__, CppUMockGen::Parameter<const m
 } } } } }
 
 namespace expect { namespace mb$ { namespace memory$ { namespace nor$ { namespace DeviceDriver$ {
+MockExpectedCall& erase(CppUMockGen::Parameter<const mb::memory::nor::DeviceDriver*> __object__, CppUMockGen::Parameter<const uint64_t> address, CppUMockGen::Parameter<const size_t> size, mb::memory::Status __return__);
+MockExpectedCall& erase(unsigned int __numCalls__, CppUMockGen::Parameter<const mb::memory::nor::DeviceDriver*> __object__, CppUMockGen::Parameter<const uint64_t> address, CppUMockGen::Parameter<const size_t> size, mb::memory::Status __return__);
+} } } } }
+
+namespace expect { namespace mb$ { namespace memory$ { namespace nor$ { namespace DeviceDriver$ {
 MockExpectedCall& erase(CppUMockGen::Parameter<const mb::memory::nor::DeviceDriver*> __object__, CppUMockGen::Parameter<const size_t> block_idx, mb::memory::Status __return__);
 MockExpectedCall& erase(unsigned int __numCalls__, CppUMockGen::Parameter<const mb::memory::nor::DeviceDriver*> __object__, CppUMockGen::Parameter<const size_t> block_idx, mb::memory::Status __return__);
 } } } } }
@@ -73,7 +73,7 @@ MockExpectedCall& close(unsigned int __numCalls__, CppUMockGen::Parameter<const 
 } } } } }
 
 namespace expect { namespace mb$ { namespace memory$ { namespace nor$ { namespace DeviceDriver$ {
-MockExpectedCall& transfer(CppUMockGen::Parameter<const mb::memory::nor::DeviceDriver*> __object__, CppUMockGen::Parameter<const void *const> cmd, CppUMockGen::Parameter<void *const> output, CppUMockGen::Parameter<const size_t> size);
-MockExpectedCall& transfer(unsigned int __numCalls__, CppUMockGen::Parameter<const mb::memory::nor::DeviceDriver*> __object__, CppUMockGen::Parameter<const void *const> cmd, CppUMockGen::Parameter<void *const> output, CppUMockGen::Parameter<const size_t> size);
+MockExpectedCall& transfer(CppUMockGen::Parameter<const mb::memory::nor::DeviceDriver*> __object__, CppUMockGen::Parameter<const void *const> cmd, CppUMockGen::Parameter<void *const> output, CppUMockGen::Parameter<const size_t> size, mb::memory::Status __return__);
+MockExpectedCall& transfer(unsigned int __numCalls__, CppUMockGen::Parameter<const mb::memory::nor::DeviceDriver*> __object__, CppUMockGen::Parameter<const void *const> cmd, CppUMockGen::Parameter<void *const> output, CppUMockGen::Parameter<const size_t> size, mb::memory::Status __return__);
 } } } } }
 
