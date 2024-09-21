@@ -79,6 +79,7 @@ function(create_test_target)
   # Link Libraries
   if(TEST_EXE_LIBRARIES)
       target_link_libraries(${exe_target_name} PRIVATE ${TEST_EXE_LIBRARIES})
+      target_link_libraries(${exe_target_name}_instrumented PRIVATE ${TEST_EXE_LIBRARIES})
   endif()
 
   # Export so other targets can use this

@@ -21,6 +21,7 @@ set(TESTING_INCLUDE_DIRECTORIES
     ${PROJECT_SOURCE_DIR}/mock
 )
 
+add_subdirectory(src/database/test_key_value_db)
 add_subdirectory(src/memory/nvm/test_nor_adesto)
 add_subdirectory(src/memory/nvm/test_nor_flash)
 

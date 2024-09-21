@@ -1,0 +1,32 @@
+include(${PROJECT_SOURCE_DIR}/test_target.cmake)
+create_test_target(
+    TARGET
+        TestKeyValueDatabase
+    TEST_SOURCES
+        test_key_value_db.cpp
+    INSTRUMENTED_SOURCES
+        ${PROJECT_SOURCE_DIR}/../mbedutils/src/database/db_support.cpp
+        ${PROJECT_SOURCE_DIR}/../mbedutils/src/database/key_value_db.cpp
+    DEPENDENT_SOURCES
+        ${PROJECT_SOURCE_DIR}/../mbedutils/lib/flashdb/port/fal/src/fal_partition.c
+        ${PROJECT_SOURCE_DIR}/../mbedutils/lib/flashdb/port/fal/src/fal_partition.c
+        ${PROJECT_SOURCE_DIR}/../mbedutils/lib/flashdb/port/fal/src/fal.c
+        ${PROJECT_SOURCE_DIR}/../mbedutils/lib/flashdb/src/fdb_kvdb.c
+        ${PROJECT_SOURCE_DIR}/../mbedutils/lib/flashdb/src/fdb_tsdb.c
+        ${PROJECT_SOURCE_DIR}/../mbedutils/lib/flashdb/src/fdb_utils.c
+        ${PROJECT_SOURCE_DIR}/../mbedutils/lib/flashdb/src/fdb.c
+        ${PROJECT_SOURCE_DIR}/expect/gpio_intf_expect.cpp
+        ${PROJECT_SOURCE_DIR}/expect/spi_intf_expect.cpp
+        ${PROJECT_SOURCE_DIR}/expect/time_intf_expect.cpp
+        ${PROJECT_SOURCE_DIR}/mock/gpio_intf_mock.cpp
+        ${PROJECT_SOURCE_DIR}/mock/spi_intf_mock.cpp
+        ${PROJECT_SOURCE_DIR}/mock/time_intf_mock.cpp
+    INCLUDE_DIRS
+        ./
+        ${TESTING_INCLUDE_DIRECTORIES}
+    LIBRARIES
+        mbedutils_lib_stl
+        mbedutils_headers
+        mbedutils_internal_headers
+    EXPORT_DIR ${CMAKE_CURRENT_BINARY_DIR}
+)
