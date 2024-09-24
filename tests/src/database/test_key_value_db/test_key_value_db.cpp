@@ -83,13 +83,13 @@ struct KVRAMData
   // Put generated NanoPB struct declarations here
 };
 
-static constexpr auto _unsorted_kv_dsc = std::to_array<KVNode_t>( {
-  KVNode_t{ /* Fill this out */ },
+static constexpr auto _unsorted_kv_dsc = std::to_array<KVParamNode>( {
+  KVParamNode{ /* Fill this out */ },
 });
 
 
 // TODO: Sort the KVNode_t array at compile time
-auto compare_kv_nodes( const KVNode_t &lhs, const KVNode_t &rhs ) -> bool
+auto compare_kv_nodes( const KVParamNode &lhs, const KVParamNode &rhs ) -> bool
 {
   return lhs.key < rhs.key;
 }

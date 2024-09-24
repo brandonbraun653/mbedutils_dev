@@ -9,6 +9,10 @@
         "__locale": "cpp",
         "string": "cpp",
         "chrono": "cpp",
-        "functional": "cpp"
+        "functional": "cpp",
+        "array": "cpp",
+        "span": "cpp",
+        "iterator": "cpp",
+        "vector": "cpp"
     }
 }
