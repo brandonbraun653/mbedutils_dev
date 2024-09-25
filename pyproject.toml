@@ -1,0 +1,32 @@
+[tool.poetry]
+name = "Mbedutils Development"
+version = "1.0.0"
+description = "Mbedutils development environment"
+authors = ["Brandon Braun <brandonbraun653@protonmail.com>"]
+license = "MIT"
+readme = "README.md"
+package-mode = false
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+crc = "^7.0.0"
+eseries = "^1.2.1"
+grpcio-tools = "^1.65.0"
+loguru = "^0.7.2"
+matplotlib = "^3.8.3"
+mypy-protobuf = "^3.6.0"
+protobuf = "^5.27.2"
+pytest = "*"
+pytest-loguru = "^0.4.0"
+pytest-check = "^2.3.1"
+
+mbedutils = {path = "mbedutils/python", develop = true}
+
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.29.2"
+

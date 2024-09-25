@@ -1,0 +1,13 @@
+syntax = "proto2";
+import "nanopb.proto";
+
+message SimplePODData {
+    required uint32 value = 1 [(nanopb).int_size = IS_8];
+}
+
+message KindaComplexPODData {
+    required uint32 value = 1 [(nanopb).int_size = IS_8];
+    required uint32 value2 = 2 [(nanopb).int_size = IS_16];
+    required uint32 value3 = 3 [(nanopb).int_size = IS_32];
+    required uint64 value4 = 4;
+}

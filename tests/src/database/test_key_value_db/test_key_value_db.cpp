@@ -16,23 +16,48 @@ Includes
 #include <array>
 #include <etl/array.h>
 #include <etl/vector.h>
-#include <mbedutils/drivers/database/key_value_db.hpp>
+#include <mbedutils/database.hpp>
 #include <mbedutils/drivers/memory/nvm/nor_flash.hpp>
 
 #include "CppUTest/TestHarness.h"
 #include "CppUTest/CommandLineTestRunner.h"
 #include "assert_expect.hpp"
 #include "nor_flash_expect.hpp"
+#include "test_kv_db.pb.h"
 
 
+using namespace mb::db;
 using namespace CppUMockGen;
+
+/*-----------------------------------------------------------------------------
+Enumerations
+-----------------------------------------------------------------------------*/
+
+enum KVAppKeys : HashKey
+{
+  KEY_SIMPLE_POD_DATA,
+  KEY_KINDA_COMPLEX_POD_DATA,
+
+  KEY_ENUM_COUNT
+};
+
+
+/*-----------------------------------------------------------------------------
+Structures
+-----------------------------------------------------------------------------*/
+
+struct KVRAMData
+{
+  SimplePODData       simple_pod_data;        /**< KEY_SIMPLE_POD_DATA */
+  KindaComplexPODData kinda_complex_pod_data; /**< KEY_KINDA_COMPLEX_POD_DATA */
+};
 
 /*-----------------------------------------------------------------------------
 Static Data
 -----------------------------------------------------------------------------*/
 
-static mb::memory::nor::DeviceDriver* s_flash_0_driver;
-static mb::memory::nor::DeviceDriver* s_flash_1_driver;
+static mb::memory::nor::DeviceDriver *s_flash_0_driver;
+static mb::memory::nor::DeviceDriver *s_flash_1_driver;
 
 extern "C"
 {
@@ -78,30 +103,59 @@ extern "C"
 }
 
 
-struct KVRAMData
-{
-  // Put generated NanoPB struct declarations here
-};
+static KVRAMData                     s_kv_ram_data;
+static PersistenKVDBStorage<20, 512> s_kv_storage;
 
 static constexpr auto _unsorted_kv_dsc = std::to_array<KVParamNode>( {
-  KVParamNode{ /* Fill this out */ },
-});
+    KVParamNode{ .hashKey      = KEY_SIMPLE_POD_DATA,
+                 .updator      = {},
+                 .validator    = {},
+                 .sanitizer    = {},
+                 .serializer   = {},
+                 .deserializer = {},
+                 .pbRAMCopy    = &s_kv_ram_data.simple_pod_data,
+                 .pbDescriptor = SimplePODData_fields,
+                 .pbSize       = SimplePODData_size,
+                 .flags        = KV_FLAG_DEFAULT_PERSISTENT },
 
+    KVParamNode{ .hashKey      = KEY_KINDA_COMPLEX_POD_DATA,
+                 .updator      = {},
+                 .validator    = {},
+                 .sanitizer    = {},
+                 .serializer   = {},
+                 .deserializer = {},
+                 .pbRAMCopy    = &s_kv_ram_data.kinda_complex_pod_data,
+                 .pbDescriptor = KindaComplexPODData_fields,
+                 .pbSize       = KindaComplexPODData_size,
+                 .flags        = KV_FLAG_DEFAULT_PERSISTENT },
 
-// TODO: Sort the KVNode_t array at compile time
-auto compare_kv_nodes( const KVParamNode &lhs, const KVParamNode &rhs ) -> bool
-{
-  return lhs.key < rhs.key;
-}
+    KVParamNode{ .hashKey      = std::numeric_limits<HashKey>::max(),
+                 .updator      = {},
+                 .validator    = {},
+                 .sanitizer    = {},
+                 .serializer   = {},
+                 .deserializer = {},
+                 .pbRAMCopy    = nullptr,
+                 .pbDescriptor = nullptr,
+                 .pbSize       = 0,
+                 .flags        = 0 },
 
+} );
 
-// static const etl::vector<KVNode_t, _unsorted_kv_dsc.size()> _sorted_kv_dsc = _unsorted_kv_dsc;
+using ParameterList = std::array<KVParamNode, _unsorted_kv_dsc.size()>;
+static constexpr ParameterList ParamSorter( const ParameterList &list )
+  {
+    auto result = list;
+    std::sort( result.begin(), result.end(), []( const KVParamNode &a, const KVParamNode &b ) -> bool { return a.hashKey < b.hashKey; } );
+    return result;
+  }
+
+static const ParameterList ParamInfo = ParamSorter( _unsorted_kv_dsc );
+
 
 /*-----------------------------------------------------------------------------
 Tests
 -----------------------------------------------------------------------------*/
-
-using namespace mb::db;
 
 int main( int argc, char **argv )
 {
@@ -136,10 +190,8 @@ TEST( key_value_db, construction_of_invalid_database_fails )
 {
   auto config = PersistentKVDB::Config();
 
-  config.dev_name             = "nor_flash_32";
-  config.partition_name       = "partition_0";
-  config.default_kv_table.kvs = nullptr;
-  config.default_kv_table.num = 0;
+  config.dev_name       = "nor_flash_32";
+  config.partition_name = "partition_0";
 
-  CHECK_FALSE( test_kvdb.init( config ) );
+  CHECK_FALSE( test_kvdb.configure( config ) );
 }

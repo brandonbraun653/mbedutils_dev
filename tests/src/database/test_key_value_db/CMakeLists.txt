@@ -5,6 +5,8 @@ create_test_target(
     TEST_SOURCES
         test_key_value_db.cpp
     INSTRUMENTED_SOURCES
+        ${PROJECT_SOURCE_DIR}/../mbedutils/src/database/db_intf.cpp
+        ${PROJECT_SOURCE_DIR}/../mbedutils/src/database/db_parameter.cpp
         ${PROJECT_SOURCE_DIR}/../mbedutils/src/database/key_value_db.cpp
     DEPENDENT_SOURCES
         ${PROJECT_SOURCE_DIR}/../mbedutils/lib/flashdb/port/fal/src/fal.c
@@ -24,6 +26,7 @@ create_test_target(
         ${PROJECT_SOURCE_DIR}/mock/nor_flash_mock.cpp
         ${PROJECT_SOURCE_DIR}/mock/spi_intf_mock.cpp
         ${PROJECT_SOURCE_DIR}/mock/time_intf_mock.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/test_kv_db.pb.c
     INCLUDE_DIRS
         ./
         ${TESTING_INCLUDE_DIRECTORIES}
