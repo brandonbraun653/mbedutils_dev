@@ -106,51 +106,51 @@ extern "C"
 static KVRAMData                     s_kv_ram_data;
 static PersistenKVDBStorage<20, 512> s_kv_storage;
 
-static constexpr auto _unsorted_kv_dsc = std::to_array<KVParamNode>( {
-    KVParamNode{ .hashKey      = KEY_SIMPLE_POD_DATA,
-                 .updator      = {},
-                 .validator    = {},
-                 .sanitizer    = {},
-                 .serializer   = {},
-                 .deserializer = {},
-                 .pbRAMCopy    = &s_kv_ram_data.simple_pod_data,
-                 .pbDescriptor = SimplePODData_fields,
-                 .pbSize       = SimplePODData_size,
-                 .flags        = KV_FLAG_DEFAULT_PERSISTENT },
+// static constexpr etl::vector _unsorted_kv_dsc{
+//     KVParamNode{ .hashKey      = KEY_SIMPLE_POD_DATA,
+//                  .updator      = {},
+//                  .validator    = {},
+//                  .sanitizer    = {},
+//                  .serializer   = {},
+//                  .deserializer = {},
+//                  .pbRAMCopy    = &s_kv_ram_data.simple_pod_data,
+//                  .pbDescriptor = SimplePODData_fields,
+//                  .pbSize       = SimplePODData_size,
+//                  .flags        = KV_FLAG_DEFAULT_PERSISTENT },
 
-    KVParamNode{ .hashKey      = KEY_KINDA_COMPLEX_POD_DATA,
-                 .updator      = {},
-                 .validator    = {},
-                 .sanitizer    = {},
-                 .serializer   = {},
-                 .deserializer = {},
-                 .pbRAMCopy    = &s_kv_ram_data.kinda_complex_pod_data,
-                 .pbDescriptor = KindaComplexPODData_fields,
-                 .pbSize       = KindaComplexPODData_size,
-                 .flags        = KV_FLAG_DEFAULT_PERSISTENT },
+//     KVParamNode{ .hashKey      = KEY_KINDA_COMPLEX_POD_DATA,
+//                  .updator      = {},
+//                  .validator    = {},
+//                  .sanitizer    = {},
+//                  .serializer   = {},
+//                  .deserializer = {},
+//                  .pbRAMCopy    = &s_kv_ram_data.kinda_complex_pod_data,
+//                  .pbDescriptor = KindaComplexPODData_fields,
+//                  .pbSize       = KindaComplexPODData_size,
+//                  .flags        = KV_FLAG_DEFAULT_PERSISTENT },
 
-    KVParamNode{ .hashKey      = std::numeric_limits<HashKey>::max(),
-                 .updator      = {},
-                 .validator    = {},
-                 .sanitizer    = {},
-                 .serializer   = {},
-                 .deserializer = {},
-                 .pbRAMCopy    = nullptr,
-                 .pbDescriptor = nullptr,
-                 .pbSize       = 0,
-                 .flags        = 0 },
+//     KVParamNode{ .hashKey      = std::numeric_limits<HashKey>::max(),
+//                  .updator      = {},
+//                  .validator    = {},
+//                  .sanitizer    = {},
+//                  .serializer   = {},
+//                  .deserializer = {},
+//                  .pbRAMCopy    = nullptr,
+//                  .pbDescriptor = nullptr,
+//                  .pbSize       = 0,
+//                  .flags        = 0 },
 
-} );
+// };
 
-using ParameterList = std::array<KVParamNode, _unsorted_kv_dsc.size()>;
-static constexpr ParameterList ParamSorter( const ParameterList &list )
-  {
-    auto result = list;
-    std::sort( result.begin(), result.end(), []( const KVParamNode &a, const KVParamNode &b ) -> bool { return a.hashKey < b.hashKey; } );
-    return result;
-  }
+// using ParameterList = std::array<KVParamNode, _unsorted_kv_dsc.size()>;
+// static constexpr ParameterList ParamSorter( const ParameterList &list )
+//   {
+//     auto result = list;
+//     std::sort( result.begin(), result.end(), []( const KVParamNode &a, const KVParamNode &b ) -> bool { return a.hashKey < b.hashKey; } );
+//     return result;
+//   }
 
-static const ParameterList ParamInfo = ParamSorter( _unsorted_kv_dsc );
+// static const ParameterList ParamInfo = ParamSorter( _unsorted_kv_dsc );
 
 
 /*-----------------------------------------------------------------------------
