@@ -6,8 +6,8 @@ create_test_target(
         test_key_value_db.cpp
     INSTRUMENTED_SOURCES
         ${PROJECT_SOURCE_DIR}/../mbedutils/src/database/db_intf.cpp
-        ${PROJECT_SOURCE_DIR}/../mbedutils/src/database/db_parameter.cpp
-        ${PROJECT_SOURCE_DIR}/../mbedutils/src/database/key_value_db.cpp
+        ${PROJECT_SOURCE_DIR}/../mbedutils/src/database/db_kv_node.cpp
+        ${PROJECT_SOURCE_DIR}/../mbedutils/src/database/db_kv_mgr.cpp
     DEPENDENT_SOURCES
         ${PROJECT_SOURCE_DIR}/../mbedutils/lib/flashdb/port/fal/src/fal.c
         ${PROJECT_SOURCE_DIR}/../mbedutils/lib/flashdb/port/fal/src/fal_flash.c

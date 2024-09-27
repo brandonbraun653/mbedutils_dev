@@ -1,9 +1,9 @@
 /******************************************************************************
  *  File Name:
- *    test_key_value_db.cpp
+ *    test_db_kv_mgr.cpp
  *
  *  Description:
- *    Test cases for key_value_db.cpp
+ *    Test cases for db_kv_mgr.cpp
  *
  *  2024 | Brandon Braun | brandonbraun653@protonmail.com
  *****************************************************************************/
@@ -37,6 +37,7 @@ enum KVAppKeys : HashKey
 {
   KEY_SIMPLE_POD_DATA,
   KEY_KINDA_COMPLEX_POD_DATA,
+  KEY_ETL_STRING_DATA,
 
   KEY_ENUM_COUNT
 };
@@ -50,12 +51,16 @@ struct KVRAMData
 {
   SimplePODData       simple_pod_data;        /**< KEY_SIMPLE_POD_DATA */
   KindaComplexPODData kinda_complex_pod_data; /**< KEY_KINDA_COMPLEX_POD_DATA */
+  etl::string<32>     etl_string_data;        /**< KEY_ETL_STRING_DATA */
 };
 
 /*-----------------------------------------------------------------------------
 Static Data
 -----------------------------------------------------------------------------*/
 
+static KVRAMData                      s_kv_cache_backing;
+static RamKVDBStorage<20, 512>        s_kv_ram_storage;
+static NvmKVDBStorage<20, 512>        s_kv_nvm_storage;
 static mb::memory::nor::DeviceDriver *s_flash_0_driver;
 static mb::memory::nor::DeviceDriver *s_flash_1_driver;
 
@@ -102,57 +107,6 @@ extern "C"
   };
 }
 
-
-static KVRAMData                     s_kv_ram_data;
-static PersistenKVDBStorage<20, 512> s_kv_storage;
-
-// static constexpr etl::vector _unsorted_kv_dsc{
-//     KVParamNode{ .hashKey      = KEY_SIMPLE_POD_DATA,
-//                  .updator      = {},
-//                  .validator    = {},
-//                  .sanitizer    = {},
-//                  .serializer   = {},
-//                  .deserializer = {},
-//                  .pbRAMCopy    = &s_kv_ram_data.simple_pod_data,
-//                  .pbDescriptor = SimplePODData_fields,
-//                  .pbSize       = SimplePODData_size,
-//                  .flags        = KV_FLAG_DEFAULT_PERSISTENT },
-
-//     KVParamNode{ .hashKey      = KEY_KINDA_COMPLEX_POD_DATA,
-//                  .updator      = {},
-//                  .validator    = {},
-//                  .sanitizer    = {},
-//                  .serializer   = {},
-//                  .deserializer = {},
-//                  .pbRAMCopy    = &s_kv_ram_data.kinda_complex_pod_data,
-//                  .pbDescriptor = KindaComplexPODData_fields,
-//                  .pbSize       = KindaComplexPODData_size,
-//                  .flags        = KV_FLAG_DEFAULT_PERSISTENT },
-
-//     KVParamNode{ .hashKey      = std::numeric_limits<HashKey>::max(),
-//                  .updator      = {},
-//                  .validator    = {},
-//                  .sanitizer    = {},
-//                  .serializer   = {},
-//                  .deserializer = {},
-//                  .pbRAMCopy    = nullptr,
-//                  .pbDescriptor = nullptr,
-//                  .pbSize       = 0,
-//                  .flags        = 0 },
-
-// };
-
-// using ParameterList = std::array<KVParamNode, _unsorted_kv_dsc.size()>;
-// static constexpr ParameterList ParamSorter( const ParameterList &list )
-//   {
-//     auto result = list;
-//     std::sort( result.begin(), result.end(), []( const KVParamNode &a, const KVParamNode &b ) -> bool { return a.hashKey < b.hashKey; } );
-//     return result;
-//   }
-
-// static const ParameterList ParamInfo = ParamSorter( _unsorted_kv_dsc );
-
-
 /*-----------------------------------------------------------------------------
 Tests
 -----------------------------------------------------------------------------*/
@@ -162,9 +116,45 @@ int main( int argc, char **argv )
   return RUN_ALL_TESTS( argc, argv );
 }
 
-TEST_GROUP( key_value_db )
+
+/*-----------------------------------------------------------------------------
+RAM Key-Value Database Tests
+-----------------------------------------------------------------------------*/
+
+TEST_GROUP( db_kv_ram )
 {
-  PersistentKVDB test_kvdb;
+  RamKVDB test_kvdb;
+
+  void setup()
+  {
+    mock().clear();
+    mock().ignoreOtherCalls();
+  }
+
+  void teardown()
+  {
+    mock().checkExpectations();
+    mock().clear();
+  }
+};
+
+TEST( db_kv_ram, configure_nominally )
+{
+  auto config             = RamKVDB::Config();
+  config.node_storage     = &s_kv_ram_storage.nodes;
+  config.transcode_buffer = { s_kv_ram_storage.transcode_buffer };
+
+  CHECK( DB_ERR_NONE == test_kvdb.configure( config ) );
+}
+
+
+/*-----------------------------------------------------------------------------
+NVM Key-Value Database Tests
+-----------------------------------------------------------------------------*/
+
+TEST_GROUP( db_kv_nvm )
+{
+  NvmKVDB test_kvdb;
 
   void setup()
   {
@@ -174,6 +164,25 @@ TEST_GROUP( key_value_db )
 
     mock().clear();
     mock().ignoreOtherCalls();
+
+    RamKVDB::Config ram_config;
+    ram_config.node_storage     = &s_kv_nvm_storage.nodes;
+    ram_config.transcode_buffer = etl::span<uint8_t>( s_kv_nvm_storage.transcode_buffer );
+
+    s_kv_nvm_storage.ramdb.configure( ram_config );
+    s_kv_nvm_storage.ramdb.insert( { .hashKey   = KEY_SIMPLE_POD_DATA,
+                                     .datacache = &s_kv_cache_backing.simple_pod_data,
+                                     .pbFields  = SimplePODData_fields,
+                                     .pbSize    = SimplePODData_size,
+                                     .flags     = KV_FLAG_DEFAULT_PERSISTENT } );
+
+    s_kv_nvm_storage.ramdb.insert( { .hashKey   = KEY_KINDA_COMPLEX_POD_DATA,
+                                     .datacache = &s_kv_cache_backing.kinda_complex_pod_data,
+                                     .pbFields  = KindaComplexPODData_fields,
+                                     .pbSize    = KindaComplexPODData_size,
+                                     .flags     = KV_FLAG_DEFAULT_PERSISTENT } );
+
+    s_kv_nvm_storage.ramdb.insert( {} );
   }
 
   void teardown()
@@ -186,9 +195,9 @@ TEST_GROUP( key_value_db )
   }
 };
 
-TEST( key_value_db, construction_of_invalid_database_fails )
+TEST( db_kv_nvm, construction_of_invalid_database_fails )
 {
-  auto config = PersistentKVDB::Config();
+  auto config = NvmKVDB::Config();
 
   config.dev_name       = "nor_flash_32";
   config.partition_name = "partition_0";
