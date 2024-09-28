@@ -1,0 +1,73 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/docker-existing-dockerfile
+{
+  "name": "Mbedutils Development Environment",
+  "build": {
+    "context": "..",
+    "dockerfile": "../Dockerfile"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "aaron-bond.better-comments",
+        "alefragnani.bookmarks",
+        "bbenoist.doxygen",
+        "bneumann.cpputest-test-adapter",
+        "cheshirekow.cmake-format",
+        "cschlosser.doxdocgen",
+        "eamodio.gitlens",
+        "emilast.logfilehighlighter",
+        "formulahendry.docker-explorer",
+        "formulahendry.docker-extension-pack",
+        "fredericbonnet.cmake-test-adapter",
+        "github.copilot",
+        "github.copilot-chat",
+        "github.remotehub",
+        "go2sh.cmake-integration-vscode",
+        "gruntfuggly.todo-tree",
+        "hbenl.vscode-test-explorer",
+        "johnpapa.vscode-peacock",
+        "josetr.cmake-language-support-vscode",
+        "marus25.cortex-debug",
+        "marus25.cortex-debug-dp-stm32f4",
+        "marus25.cortex-debug-dp-stm32l4",
+        "mcu-debug.debug-tracker-vscode",
+        "mcu-debug.memory-view",
+        "mcu-debug.peripheral-viewer",
+        "mcu-debug.rtos-views",
+        "mhutchie.git-graph",
+        "ms-azuretools.vscode-docker",
+        "ms-dotnettools.vscode-dotnet-runtime",
+        "ms-vscode-remote.remote-containers",
+        "ms-vscode-remote.remote-ssh",
+        "ms-vscode-remote.remote-ssh-edit",
+        "ms-vscode-remote.remote-wsl",
+        "ms-vscode-remote.vscode-remote-extensionpack",
+        "ms-vscode.azure-repos",
+        "ms-vscode.cmake-tools",
+        "ms-vscode.cpptools",
+        "ms-vscode.cpptools-extension-pack",
+        "ms-vscode.cpptools-themes",
+        "ms-vscode.hexeditor",
+        "ms-vscode.remote-explorer",
+        "ms-vscode.remote-repositories",
+        "ms-vscode.remote-server",
+        "ms-vscode.test-adapter-converter",
+        "ms-vscode.vscode-serial-monitor",
+        "peakchen90.open-html-in-browser",
+        "pkief.material-icon-theme",
+        "ryu1kn.partial-diff",
+        "stevebushresearch.buildoutputcolorizer",
+        "trond-snekvik.gnu-mapfiles",
+        "twxs.cmake",
+        "tyriar.sort-lines",
+        "usernamehw.errorlens",
+        "xaver.clang-format",
+        "yzhang.markdown-all-in-one",
+        "zeshuaro.vscode-python-poetry",
+        "zixuanwang.linkerscript",
+        "zxh404.vscode-proto3"
+      ]
+    }
+  }
+}
