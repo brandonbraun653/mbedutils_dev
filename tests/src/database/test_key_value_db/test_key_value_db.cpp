@@ -3,7 +3,7 @@
  *    test_db_kv_mgr.cpp
  *
  *  Description:
- *    Test cases for db_kv_mgr.cpp
+ *    Test cases for the key-value database module.
  *
  *  2024 | Brandon Braun | brandonbraun653@protonmail.com
  *****************************************************************************/
@@ -59,8 +59,8 @@ Static Data
 -----------------------------------------------------------------------------*/
 
 static KVRAMData                      s_kv_cache_backing;
-static RamKVDBStorage<20, 512>        s_kv_ram_storage;
-static NvmKVDBStorage<20, 512>        s_kv_nvm_storage;
+static RamKVDB::Storage<20, 512>      s_kv_ram_storage;
+static NvmKVDB::Storage<20, 512>      s_kv_nvm_storage;
 static mb::memory::nor::DeviceDriver *s_flash_0_driver;
 static mb::memory::nor::DeviceDriver *s_flash_1_driver;
 
@@ -116,6 +116,191 @@ int main( int argc, char **argv )
   return RUN_ALL_TESTS( argc, argv );
 }
 
+/*-----------------------------------------------------------------------------
+KVNode Action Callback Tests
+-----------------------------------------------------------------------------*/
+
+TEST_GROUP( kv_node_action_callbacks )
+{
+  KVNode test_node;
+
+  void setup()
+  {
+    mock().clear();
+    mock().ignoreOtherCalls();
+  }
+
+  void teardown()
+  {
+    mock().checkExpectations();
+    mock().clear();
+  }
+};
+
+
+TEST( kv_node_action_callbacks, writer_memcpy )
+{
+}
+
+/*-----------------------------------------------------------------------------
+KVNode Tests
+-----------------------------------------------------------------------------*/
+
+/**
+ * @brief Test harness for KVNode testing
+ */
+class KVNodeHarness
+{
+public:
+  etl::span<uint8_t> transcode_buffer;
+
+  SanitizeFunc sanitize_delegate;
+  size_t       sanitize_callback_calls;
+
+  ValidateFunc validate_delegate;
+  size_t       validate_callback_calls;
+
+  WriteFunc write_delegate;
+  size_t    write_callback_calls;
+
+  ReadFunc  read_delegate;
+  size_t    read_callback_calls;
+
+  void reset()
+  {
+    sanitize_callback_calls = 0;
+    sanitize_delegate       = SanitizeFunc::create<KVNodeHarness, &KVNodeHarness::_cb_sanitize>( *this );
+
+    validate_callback_calls = 0;
+    validate_delegate       = ValidateFunc::create<KVNodeHarness, &KVNodeHarness::_cb_validate>( *this );
+
+    write_callback_calls = 0;
+    write_delegate       = WriteFunc::create<KVNodeHarness, &KVNodeHarness::_cb_write>( *this );
+
+    read_callback_calls = 0;
+    read_delegate       = ReadFunc::create<KVNodeHarness, &KVNodeHarness::_cb_read>( *this );
+
+    _txcode_storage.fill( 0 );
+    transcode_buffer = { _txcode_storage.data(), _txcode_storage.size() };
+  }
+
+private:
+  etl::array<uint8_t, 512> _txcode_storage;
+
+  bool _cb_validate( const KVNode &node )
+  {
+    validate_callback_calls++;
+    return true;
+  }
+
+  void _cb_sanitize( KVNode &node )
+  {
+    sanitize_callback_calls++;
+  }
+
+  bool _cb_write( KVNode &node, const void *data, const size_t size, const bool valid )
+  {
+    write_callback_calls++;
+    return true;
+  }
+
+  bool _cb_read( const KVNode &node, void *data, const size_t size )
+  {
+    read_callback_calls++;
+    return true;
+  }
+};
+
+
+TEST_GROUP( kv_node )
+{
+  KVNode test_node;
+  KVNodeHarness harness;
+
+  void setup()
+  {
+    /*-------------------------------------------------------------------------
+    Reset test data
+    -------------------------------------------------------------------------*/
+    harness.reset();
+
+    mock().clear();
+    mock().ignoreOtherCalls();
+  }
+
+  void teardown()
+  {
+    mock().checkExpectations();
+    mock().clear();
+  }
+};
+
+
+TEST( kv_node, nominal_construction )
+{
+  CHECK( MAX_HASH_KEY == test_node.hashKey );
+  CHECK( nullptr == test_node.datacache );
+  CHECK( nullptr == test_node.pbFields );
+  CHECK( 0 == test_node.dataSize );
+  CHECK( 0 == test_node.flags );
+}
+
+TEST( kv_node, nominal_sanitize )
+{
+  test_node.sanitizer = harness.sanitize_delegate;
+  sanitize( test_node );
+  CHECK_EQUAL( 1, harness.sanitize_callback_calls );
+}
+
+TEST( kv_node, nominal_validity )
+{
+  test_node.validator = harness.validate_delegate;
+  CHECK( is_valid( test_node ) );
+  CHECK_EQUAL( 1, harness.validate_callback_calls );
+}
+
+TEST( kv_node, validity_with_no_validator )
+{
+  CHECK( false == is_valid( test_node ) );
+}
+
+TEST( kv_node, nominal_write )
+{
+  test_node.writer = harness.write_delegate;
+  CHECK( write( test_node, nullptr, 0, true ) );
+  CHECK_EQUAL( 1, harness.write_callback_calls );
+}
+
+TEST( kv_node, nominal_read )
+{
+  test_node.reader = harness.read_delegate;
+  CHECK( read( test_node, nullptr, 0 ) );
+  CHECK_EQUAL( 1, harness.read_callback_calls );
+}
+
+TEST( kv_node, read_with_no_reader )
+{
+  CHECK( false == read( test_node, nullptr, 0 ) );
+}
+
+TEST( kv_node, write_with_no_writer )
+{
+  CHECK( false == write( test_node, nullptr, 0, true ) );
+}
+
+TEST( kv_node, nominal_transcode )
+{
+  test_node.datacache = &s_kv_cache_backing.simple_pod_data;
+  test_node.dataSize  = SimplePODData_size;
+  test_node.pbFields  = SimplePODData_fields;
+
+  s_kv_cache_backing.simple_pod_data.value = 0x55;
+
+  CHECK( serialize( test_node, harness.transcode_buffer.data(), harness.transcode_buffer.size() ) );
+  CHECK( deserialize( test_node, harness.transcode_buffer.data(), harness.transcode_buffer.size() ) );
+
+  CHECK( 0x55 == s_kv_cache_backing.simple_pod_data.value );
+}
 
 /*-----------------------------------------------------------------------------
 RAM Key-Value Database Tests
@@ -147,7 +332,6 @@ TEST( db_kv_ram, configure_nominally )
   CHECK( DB_ERR_NONE == test_kvdb.configure( config ) );
 }
 
-
 /*-----------------------------------------------------------------------------
 NVM Key-Value Database Tests
 -----------------------------------------------------------------------------*/
@@ -173,13 +357,13 @@ TEST_GROUP( db_kv_nvm )
     s_kv_nvm_storage.ramdb.insert( { .hashKey   = KEY_SIMPLE_POD_DATA,
                                      .datacache = &s_kv_cache_backing.simple_pod_data,
                                      .pbFields  = SimplePODData_fields,
-                                     .pbSize    = SimplePODData_size,
+                                     .dataSize    = SimplePODData_size,
                                      .flags     = KV_FLAG_DEFAULT_PERSISTENT } );
 
     s_kv_nvm_storage.ramdb.insert( { .hashKey   = KEY_KINDA_COMPLEX_POD_DATA,
                                      .datacache = &s_kv_cache_backing.kinda_complex_pod_data,
                                      .pbFields  = KindaComplexPODData_fields,
-                                     .pbSize    = KindaComplexPODData_size,
+                                     .dataSize    = KindaComplexPODData_size,
                                      .flags     = KV_FLAG_DEFAULT_PERSISTENT } );
 
     s_kv_nvm_storage.ramdb.insert( {} );

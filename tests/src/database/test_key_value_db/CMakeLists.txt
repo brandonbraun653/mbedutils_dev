@@ -9,24 +9,31 @@ create_test_target(
         ${PROJECT_SOURCE_DIR}/../mbedutils/src/database/db_kv_node.cpp
         ${PROJECT_SOURCE_DIR}/../mbedutils/src/database/db_kv_mgr.cpp
     DEPENDENT_SOURCES
+        ${CMAKE_CURRENT_SOURCE_DIR}/test_kv_db.pb.c
         ${PROJECT_SOURCE_DIR}/../mbedutils/lib/flashdb/port/fal/src/fal.c
         ${PROJECT_SOURCE_DIR}/../mbedutils/lib/flashdb/port/fal/src/fal_flash.c
         ${PROJECT_SOURCE_DIR}/../mbedutils/lib/flashdb/port/fal/src/fal_partition.c
+        ${PROJECT_SOURCE_DIR}/../mbedutils/lib/flashdb/src/fdb.c
         ${PROJECT_SOURCE_DIR}/../mbedutils/lib/flashdb/src/fdb_kvdb.c
         ${PROJECT_SOURCE_DIR}/../mbedutils/lib/flashdb/src/fdb_tsdb.c
         ${PROJECT_SOURCE_DIR}/../mbedutils/lib/flashdb/src/fdb_utils.c
-        ${PROJECT_SOURCE_DIR}/../mbedutils/lib/flashdb/src/fdb.c
+        ${PROJECT_SOURCE_DIR}/../mbedutils/lib/nanopb/pb_common.c
+        ${PROJECT_SOURCE_DIR}/../mbedutils/lib/nanopb/pb_decode.c
+        ${PROJECT_SOURCE_DIR}/../mbedutils/lib/nanopb/pb_encode.c
+        ${PROJECT_SOURCE_DIR}/expect/assert_expect.cpp
+        ${PROJECT_SOURCE_DIR}/expect/assert_intf_expect.cpp
         ${PROJECT_SOURCE_DIR}/expect/gpio_intf_expect.cpp
         ${PROJECT_SOURCE_DIR}/expect/mutex_intf_expect.cpp
         ${PROJECT_SOURCE_DIR}/expect/nor_flash_expect.cpp
         ${PROJECT_SOURCE_DIR}/expect/spi_intf_expect.cpp
         ${PROJECT_SOURCE_DIR}/expect/time_intf_expect.cpp
+        ${PROJECT_SOURCE_DIR}/mock/assert_mock.cpp
+        ${PROJECT_SOURCE_DIR}/mock/assert_intf_mock.cpp
         ${PROJECT_SOURCE_DIR}/mock/gpio_intf_mock.cpp
         ${PROJECT_SOURCE_DIR}/mock/mutex_intf_mock.cpp
         ${PROJECT_SOURCE_DIR}/mock/nor_flash_mock.cpp
         ${PROJECT_SOURCE_DIR}/mock/spi_intf_mock.cpp
         ${PROJECT_SOURCE_DIR}/mock/time_intf_mock.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/test_kv_db.pb.c
     INCLUDE_DIRS
         ./
         ${TESTING_INCLUDE_DIRECTORIES}
