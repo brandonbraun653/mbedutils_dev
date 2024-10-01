@@ -296,8 +296,8 @@ TEST( kv_node, nominal_transcode )
 
   s_kv_cache_backing.simple_pod_data.value = 0x55;
 
-  CHECK( serialize( test_node, harness.transcode_buffer.data(), harness.transcode_buffer.size() ) );
-  CHECK( deserialize( test_node, harness.transcode_buffer.data(), harness.transcode_buffer.size() ) );
+  auto size = serialize( test_node, harness.transcode_buffer.data(), harness.transcode_buffer.size() );
+  CHECK( deserialize( test_node, harness.transcode_buffer.data(), size ) );
 
   CHECK( 0x55 == s_kv_cache_backing.simple_pod_data.value );
 }
