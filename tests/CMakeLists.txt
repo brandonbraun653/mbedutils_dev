@@ -26,4 +26,8 @@ add_subdirectory(src/memory/nvm/test_nor_adesto)
 add_subdirectory(src/memory/nvm/test_nor_flash)
 
 add_custom_target(BuildAllTests)
-add_dependencies(BuildAllTests TestNorAdesto TestNorFlash)
+add_dependencies(BuildAllTests
+  TestKeyValueDatabase
+  TestNorAdesto
+  TestNorFlash
+)
