@@ -12,4 +12,7 @@ PB_BIND(SimplePODData, SimplePODData, AUTO)
 PB_BIND(KindaComplexPODData, KindaComplexPODData, AUTO)
 
 
+PB_BIND(StringData, StringData, AUTO)
+
+
 

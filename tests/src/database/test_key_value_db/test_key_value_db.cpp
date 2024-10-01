@@ -204,10 +204,10 @@ private:
     return true;
   }
 
-  bool _cb_read( const KVNode &node, void *data, const size_t size )
+  int _cb_read( const KVNode &node, void *data, const size_t size )
   {
     read_callback_calls++;
-    return true;
+    return static_cast<int>( size );
   }
 };
 
@@ -274,7 +274,7 @@ TEST( kv_node, nominal_write )
 TEST( kv_node, nominal_read )
 {
   test_node.reader = harness.read_delegate;
-  CHECK( read( test_node, nullptr, 0 ) );
+  CHECK_EQUAL( 0, read( test_node, nullptr, 0 ) );
   CHECK_EQUAL( 1, harness.read_callback_calls );
 }
 
@@ -300,6 +300,124 @@ TEST( kv_node, nominal_transcode )
   CHECK( deserialize( test_node, harness.transcode_buffer.data(), size ) );
 
   CHECK( 0x55 == s_kv_cache_backing.simple_pod_data.value );
+}
+
+TEST( kv_node, kv_writer_memcpy )
+{
+  /* Reset test data */
+  s_kv_cache_backing.simple_pod_data.value = 0;
+
+  test_node.datacache = &s_kv_cache_backing.simple_pod_data;
+  test_node.dataSize  = SimplePODData_size;
+  test_node.pbFields  = SimplePODData_fields;
+
+  SimplePODData data_to_copy;
+  data_to_copy.value = 0x55;
+
+  CHECK( kv_writer_memcpy( test_node, &data_to_copy, SimplePODData_size, true ) );
+  CHECK( 0x55 == s_kv_cache_backing.simple_pod_data.value );
+}
+
+TEST( kv_node, kv_writer_memcpy_via_delegate )
+{
+  /* Reset test data */
+  s_kv_cache_backing.simple_pod_data.value = 0;
+
+  test_node.datacache = &s_kv_cache_backing.simple_pod_data;
+  test_node.dataSize  = SimplePODData_size;
+  test_node.pbFields  = SimplePODData_fields;
+  test_node.writer    = WriteFunc::create<kv_writer_memcpy>();
+
+  SimplePODData data_to_copy;
+  data_to_copy.value = 0x55;
+
+  CHECK( write( test_node, &data_to_copy, SimplePODData_size, true ) );
+  CHECK( 0x55 == s_kv_cache_backing.simple_pod_data.value );
+  CHECK( test_node.flags & KV_FLAG_VALID );
+}
+
+TEST( kv_node, kv_writer_char_to_etl_string )
+{
+  /* Reset test data */
+  s_kv_cache_backing.etl_string_data.clear();
+
+  test_node.datacache = &s_kv_cache_backing.etl_string_data;
+  test_node.dataSize  = StringData_size;
+  test_node.pbFields  = StringData_fields;
+  test_node.writer    = WriteFunc::create<kv_writer_char_to_etl_string>();
+
+  etl::string<32> data_to_copy = "Hello, World!";
+
+  CHECK( write( test_node, data_to_copy.c_str(), data_to_copy.size(), true ) );
+  CHECK( 0 == data_to_copy.compare( s_kv_cache_backing.etl_string_data ) );
+  CHECK( is_valid( test_node ) );
+}
+
+TEST( kv_node, kv_reader_memcpy )
+{
+  /* Reset test data */
+  s_kv_cache_backing.simple_pod_data.value = 0;
+
+  test_node.datacache = &s_kv_cache_backing.simple_pod_data;
+  test_node.dataSize  = SimplePODData_size;
+  test_node.pbFields  = SimplePODData_fields;
+  test_node.writer    = WriteFunc::create<kv_writer_memcpy>();
+  test_node.reader    = ReadFunc::create<kv_reader_memcpy>();
+
+  SimplePODData data_to_copy;
+  data_to_copy.value = 0x55;
+
+  CHECK( write( test_node, &data_to_copy, SimplePODData_size, true ) );
+  CHECK( is_valid( test_node ) );
+
+  SimplePODData data_to_read;
+  CHECK( read( test_node, &data_to_read, SimplePODData_size ) );
+  CHECK( 0x55 == data_to_read.value );
+}
+
+TEST( kv_node, kv_reader_memcpy_with_validity_status_is_invalid )
+{
+  /* Reset test data */
+  s_kv_cache_backing.simple_pod_data.value = 0;
+
+  test_node.datacache = &s_kv_cache_backing.simple_pod_data;
+  test_node.dataSize  = SimplePODData_size;
+  test_node.pbFields  = SimplePODData_fields;
+  test_node.writer    = WriteFunc::create<kv_writer_memcpy>();
+  test_node.reader    = ReadFunc::create<kv_reader_memcpy>();
+
+  SimplePODData data_to_copy;
+  data_to_copy.value = 0x55;
+
+  CHECK( write( test_node, &data_to_copy, SimplePODData_size, false ) );
+  CHECK( !is_valid( test_node ) );
+
+  SimplePODData data_to_read;
+  CHECK( read( test_node, &data_to_read, SimplePODData_size ) );
+  CHECK( 0x55 == data_to_read.value );
+}
+
+TEST( kv_node, kv_reader_etl_string_to_char )
+{
+  /* Reset test data */
+  s_kv_cache_backing.etl_string_data.clear();
+
+  test_node.datacache = &s_kv_cache_backing.etl_string_data;
+  test_node.dataSize  = StringData_size;
+  test_node.pbFields  = StringData_fields;
+  test_node.writer    = WriteFunc::create<kv_writer_char_to_etl_string>();
+  test_node.reader    = ReadFunc::create<kv_reader_etl_string_to_char>();
+
+  etl::string<32> data_to_copy = "Hello, World!";
+
+  CHECK( write( test_node, data_to_copy.c_str(), data_to_copy.size(), true ) );
+  CHECK( is_valid( test_node ) );
+
+  char data_to_read[ 32 ];
+  memset( data_to_read, 0, sizeof( data_to_read ) );
+
+  CHECK( read( test_node, data_to_read, sizeof( data_to_read ) ) );
+  CHECK( 0 == data_to_copy.compare( data_to_read ) );
 }
 
 /*-----------------------------------------------------------------------------

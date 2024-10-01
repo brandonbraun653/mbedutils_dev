@@ -21,6 +21,10 @@ typedef struct _KindaComplexPODData {
     uint64_t value4;
 } KindaComplexPODData;
 
+typedef struct _StringData {
+    char value[32];
+} StringData;
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,8 +33,10 @@ extern "C" {
 /* Initializer values for message structs */
 #define SimplePODData_init_default               {0}
 #define KindaComplexPODData_init_default         {0, 0, 0, 0}
+#define StringData_init_default                  {""}
 #define SimplePODData_init_zero                  {0}
 #define KindaComplexPODData_init_zero            {0, 0, 0, 0}
+#define StringData_init_zero                     {""}
 
 /* Field tags (for use in manual encoding/decoding) */
 #define SimplePODData_value_tag                  1
@@ -38,6 +44,7 @@ extern "C" {
 #define KindaComplexPODData_value2_tag           2
 #define KindaComplexPODData_value3_tag           3
 #define KindaComplexPODData_value4_tag           4
+#define StringData_value_tag                     1
 
 /* Struct field encoding specification for nanopb */
 #define SimplePODData_FIELDLIST(X, a) \
@@ -53,17 +60,25 @@ X(a, STATIC,   REQUIRED, UINT64,   value4,            4)
 #define KindaComplexPODData_CALLBACK NULL
 #define KindaComplexPODData_DEFAULT NULL
 
+#define StringData_FIELDLIST(X, a) \
+X(a, STATIC,   REQUIRED, STRING,   value,             1)
+#define StringData_CALLBACK NULL
+#define StringData_DEFAULT NULL
+
 extern const pb_msgdesc_t SimplePODData_msg;
 extern const pb_msgdesc_t KindaComplexPODData_msg;
+extern const pb_msgdesc_t StringData_msg;
 
 /* Defines for backwards compatibility with code written before nanopb-0.4.0 */
 #define SimplePODData_fields &SimplePODData_msg
 #define KindaComplexPODData_fields &KindaComplexPODData_msg
+#define StringData_fields &StringData_msg
 
 /* Maximum encoded size of messages (where known) */
 #define KindaComplexPODData_size                 24
 #define SimplePODData_size                       3
-#define TEST_KV_DB_PB_H_MAX_SIZE                 KindaComplexPODData_size
+#define StringData_size                          33
+#define TEST_KV_DB_PB_H_MAX_SIZE                 StringData_size
 
 #ifdef __cplusplus
 } /* extern "C" */
@@ -92,6 +107,20 @@ struct MessageDescriptor<KindaComplexPODData> {
     static PB_INLINE_CONSTEXPR const pb_size_t size = KindaComplexPODData_size;
     static inline const pb_msgdesc_t* fields() {
         return &KindaComplexPODData_msg;
+    }
+    static inline bool has_msgid() {
+        return false;
+    }
+    static inline uint32_t msgid() {
+        return 0;
+    }
+};
+template <>
+struct MessageDescriptor<StringData> {
+    static PB_INLINE_CONSTEXPR const pb_size_t fields_array_length = 1;
+    static PB_INLINE_CONSTEXPR const pb_size_t size = StringData_size;
+    static inline const pb_msgdesc_t* fields() {
+        return &StringData_msg;
     }
     static inline bool has_msgid() {
         return false;
