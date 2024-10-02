@@ -211,7 +211,6 @@ private:
   }
 };
 
-
 TEST_GROUP( kv_node )
 {
   KVNode test_node;
@@ -234,7 +233,6 @@ TEST_GROUP( kv_node )
     mock().clear();
   }
 };
-
 
 TEST( kv_node, nominal_construction )
 {
@@ -300,6 +298,46 @@ TEST( kv_node, nominal_transcode )
   CHECK( deserialize( test_node, harness.transcode_buffer.data(), size ) );
 
   CHECK( 0x55 == s_kv_cache_backing.simple_pod_data.value );
+}
+
+TEST( kv_node, serialize_bad_arguments )
+{
+  CHECK( -1 == serialize( test_node, nullptr, 55 ) );
+  CHECK( -1 == serialize( test_node, harness.transcode_buffer.data(), 0 ) );
+
+  test_node.pbFields = nullptr;
+  CHECK( -1 == serialize( test_node, harness.transcode_buffer.data(), harness.transcode_buffer.size() ) );
+}
+
+TEST( kv_node, serialize_bad_configuration )
+{
+  test_node.datacache = &s_kv_cache_backing.simple_pod_data;
+  test_node.dataSize  = SimplePODData_size;
+  test_node.pbFields  = StringData_fields; // Wrong fields for the data type
+
+  test_node.datacache = nullptr;
+  CHECK( -1 == serialize( test_node, harness.transcode_buffer.data(), harness.transcode_buffer.size() ) );
+}
+
+TEST( kv_node, deserialize_bad_arguments )
+{
+  CHECK( false == deserialize( test_node, nullptr, 55 ) );
+
+  test_node.datacache = nullptr;
+  test_node.pbFields  = SimplePODData_fields;
+  CHECK( false == deserialize( test_node, harness.transcode_buffer.data(), harness.transcode_buffer.size() ) );
+
+  test_node.pbFields = nullptr;
+  CHECK( false == deserialize( test_node, harness.transcode_buffer.data(), harness.transcode_buffer.size() ) );
+}
+
+TEST( kv_node, deserialize_bad_configuration )
+{
+  test_node.datacache = &s_kv_cache_backing.simple_pod_data;
+  test_node.dataSize  = SimplePODData_size;
+  test_node.pbFields  = StringData_fields; // Wrong fields for the data type
+
+  CHECK( false == deserialize( test_node, harness.transcode_buffer.data(), harness.transcode_buffer.size() ) );
 }
 
 TEST( kv_node, kv_writer_memcpy )
@@ -506,15 +544,50 @@ RAM Key-Value Database Tests
 TEST_GROUP( db_kv_ram )
 {
   RamKVDB test_kvdb;
+  RamKVDB::Config test_config;
 
   void setup()
   {
+    /*-------------------------------------------------------------------------
+    Configure a basic RAM database
+    -------------------------------------------------------------------------*/
+    s_kv_ram_storage.nodes.clear();
+    s_kv_ram_storage.nodes.push_back( { .hashKey   = KEY_SIMPLE_POD_DATA,
+                                        .datacache = &s_kv_cache_backing.simple_pod_data,
+                                        .pbFields  = SimplePODData_fields,
+                                        .dataSize  = SimplePODData_size,
+                                        .flags     = KV_FLAG_DEFAULT_VOLATILE } );
+
+    s_kv_ram_storage.nodes.push_back( { .hashKey   = KEY_KINDA_COMPLEX_POD_DATA,
+                                        .datacache = &s_kv_cache_backing.kinda_complex_pod_data,
+                                        .pbFields  = KindaComplexPODData_fields,
+                                        .dataSize  = KindaComplexPODData_size,
+                                        .flags     = KV_FLAG_DEFAULT_VOLATILE } );
+
+    s_kv_ram_storage.nodes.push_back( { .hashKey   = KEY_ETL_STRING_DATA,
+                                        .datacache = &s_kv_cache_backing.etl_string_data,
+                                        .pbFields  = StringData_fields,
+                                        .dataSize  = StringData_size,
+                                        .flags     = KV_FLAG_DEFAULT_VOLATILE } );
+
+    s_kv_ram_storage.nodes.push_back( {} );
+
+    test_config.node_storage     = &s_kv_ram_storage.nodes;
+    test_config.transcode_buffer = s_kv_ram_storage.transcode_buffer;
+
+    /*-------------------------------------------------------------------------
+    Initialize the database
+    -------------------------------------------------------------------------*/
+    CHECK( DB_ERR_NONE == test_kvdb.configure( test_config ) );
+
     mock().clear();
     mock().ignoreOtherCalls();
   }
 
   void teardown()
   {
+    test_kvdb.deinit();
+
     mock().checkExpectations();
     mock().clear();
   }
@@ -522,11 +595,67 @@ TEST_GROUP( db_kv_ram )
 
 TEST( db_kv_ram, configure_nominally )
 {
-  auto config             = RamKVDB::Config();
+  /*---------------------------------------------------------------------------
+  Setup the configuration
+  ---------------------------------------------------------------------------*/
+  RamKVDB kvdb;
+  RamKVDB::Config config;
   config.node_storage     = &s_kv_ram_storage.nodes;
   config.transcode_buffer = { s_kv_ram_storage.transcode_buffer };
 
-  CHECK( DB_ERR_NONE == test_kvdb.configure( config ) );
+  /*---------------------------------------------------------------------------
+  Call FUT
+  ---------------------------------------------------------------------------*/
+  CHECK( DB_ERR_NONE == kvdb.configure( config ) );
+}
+
+TEST( db_kv_ram, configure_bad_arguments )
+{
+  /*---------------------------------------------------------------------------
+  Setup the configuration
+  ---------------------------------------------------------------------------*/
+  RamKVDB kvdb;
+  RamKVDB::Config config;
+  config.node_storage     = nullptr;
+  config.transcode_buffer = { s_kv_ram_storage.transcode_buffer };
+
+  /*---------------------------------------------------------------------------
+  Call FUT
+  ---------------------------------------------------------------------------*/
+  CHECK( DB_ERR_BAD_ARG == kvdb.configure( config ) );
+
+  /*---------------------------------------------------------------------------
+  Setup the configuration
+  ---------------------------------------------------------------------------*/
+  config.node_storage = &s_kv_ram_storage.nodes;
+  config.transcode_buffer = {};
+
+  /*---------------------------------------------------------------------------
+  Call FUT
+  ---------------------------------------------------------------------------*/
+  CHECK( DB_ERR_BAD_ARG == kvdb.configure( config ) );
+}
+
+TEST( db_kv_ram, configure_transcode_buffer_too_small )
+{
+  /*---------------------------------------------------------------------------
+  Setup the configuration
+  ---------------------------------------------------------------------------*/
+  RamKVDB kvdb;
+  RamKVDB::Config config;
+  config.node_storage     = &s_kv_ram_storage.nodes;
+  config.transcode_buffer = { s_kv_ram_storage.transcode_buffer.data(), 1 };
+
+  /*---------------------------------------------------------------------------
+  Call FUT
+  ---------------------------------------------------------------------------*/
+  CHECK( DB_ERR_TRANSCODE_BUFFER_TOO_SMALL == kvdb.configure( config ) );
+}
+
+TEST( db_kv_ram, init )
+{
+  // KVDB was configured with some default data in the setup() method.
+  CHECK( test_kvdb.init() );
 }
 
 /*-----------------------------------------------------------------------------

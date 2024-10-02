@@ -15,3 +15,9 @@ message KindaComplexPODData {
 message StringData {
     required string value = 1 [(nanopb).max_size = 32];
 }
+
+message GyroSensorData {
+    required float x = 1;
+    required float y = 2;
+    required float z = 3;
+}

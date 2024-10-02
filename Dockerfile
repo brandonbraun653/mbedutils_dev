@@ -15,9 +15,9 @@ RUN apt-get update && \
     cpputest \
     curl \
     default-jdk \
-    doxygen \
     dotnet-runtime-8.0 \
     dotnet-sdk-8.0 \
+    doxygen \
     g++ \
     gcc \
     gcovr \
@@ -26,9 +26,17 @@ RUN apt-get update && \
     libclang-dev \
     llvm-dev \
     ninja-build \
+    python3-pip \
+    python3.12 \
+    python3.12-dev \
+    python3.12-venv \
     wget \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# Install the latest version of poetry
+RUN curl -sSL https://install.python-poetry.org | python3.12 - && \
+    ln -s /root/.poetry/bin/poetry /usr/local/bin/poetry
 
 # Download and install arm-none-eabi-gcc for ARM Cortex-M cross-compilation
 ENV ARM_GCC_URL=https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v13.3.1-1.1/xpack-arm-none-eabi-gcc-13.3.1-1.1-linux-x64.tar.gz

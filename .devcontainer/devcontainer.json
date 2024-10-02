@@ -49,6 +49,7 @@
         "ms-vscode.cpptools-extension-pack",
         "ms-vscode.cpptools-themes",
         "ms-vscode.hexeditor",
+        "ms-vscode.live-server",
         "ms-vscode.remote-explorer",
         "ms-vscode.remote-repositories",
         "ms-vscode.remote-server",
