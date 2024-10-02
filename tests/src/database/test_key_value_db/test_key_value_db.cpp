@@ -314,8 +314,9 @@ TEST( kv_node, kv_writer_memcpy )
   SimplePODData data_to_copy;
   data_to_copy.value = 0x55;
 
-  CHECK( kv_writer_memcpy( test_node, &data_to_copy, SimplePODData_size, true ) );
+  CHECK( kv_writer_memcpy( test_node, &data_to_copy, SimplePODData_size, false ) );
   CHECK( 0x55 == s_kv_cache_backing.simple_pod_data.value );
+  CHECK( false == is_valid( test_node ) );
 }
 
 TEST( kv_node, kv_writer_memcpy_via_delegate )
@@ -351,6 +352,11 @@ TEST( kv_node, kv_writer_char_to_etl_string )
   CHECK( write( test_node, data_to_copy.c_str(), data_to_copy.size(), true ) );
   CHECK( 0 == data_to_copy.compare( s_kv_cache_backing.etl_string_data ) );
   CHECK( is_valid( test_node ) );
+
+  /* Set validity to false */
+  CHECK( write( test_node, data_to_copy.c_str(), data_to_copy.size(), false ) );
+  CHECK( 0 == data_to_copy.compare( s_kv_cache_backing.etl_string_data ) );
+  CHECK( !is_valid( test_node ) );
 }
 
 TEST( kv_node, kv_reader_memcpy )
@@ -367,12 +373,35 @@ TEST( kv_node, kv_reader_memcpy )
   SimplePODData data_to_copy;
   data_to_copy.value = 0x55;
 
+  /* Write with validity */
   CHECK( write( test_node, &data_to_copy, SimplePODData_size, true ) );
   CHECK( is_valid( test_node ) );
 
+  /* Write as invalid */
+  CHECK( write( test_node, &data_to_copy, SimplePODData_size, false ) );
+  CHECK( !is_valid( test_node ) );
+
+  /* Read the data out */
   SimplePODData data_to_read;
   CHECK( read( test_node, &data_to_read, SimplePODData_size ) );
   CHECK( 0x55 == data_to_read.value );
+}
+
+TEST( kv_node, kv_reader_memcpy_invalid_inputs )
+{
+  /* Reset test data */
+  s_kv_cache_backing.simple_pod_data.value = 0;
+
+  test_node.datacache = nullptr;
+  test_node.dataSize  = 0;
+  test_node.pbFields  = SimplePODData_fields;
+
+  SimplePODData data_to_copy;
+  data_to_copy.value = 0x55;
+
+  CHECK( -1 == kv_reader_memcpy( test_node, nullptr, SimplePODData_size ) );
+  CHECK( -1 == kv_reader_memcpy( test_node, &data_to_copy, 0 ) );
+  CHECK( -1 == kv_reader_memcpy( test_node, &data_to_copy, SimplePODData_size ) );
 }
 
 TEST( kv_node, kv_reader_memcpy_with_validity_status_is_invalid )
@@ -418,6 +447,56 @@ TEST( kv_node, kv_reader_etl_string_to_char )
 
   CHECK( read( test_node, data_to_read, sizeof( data_to_read ) ) );
   CHECK( 0 == data_to_copy.compare( data_to_read ) );
+}
+
+TEST( kv_node, kv_reader_etl_string_to_char_invalid_inputs )
+{
+  /* Reset test data */
+  s_kv_cache_backing.etl_string_data.clear();
+
+  test_node.datacache = nullptr;
+  test_node.dataSize  = 0;
+  test_node.pbFields  = StringData_fields;
+
+  char data_to_read[ 32 ];
+  memset( data_to_read, 0, sizeof( data_to_read ) );
+
+  CHECK( -1 == kv_reader_etl_string_to_char( test_node, data_to_read, sizeof( data_to_read ) ) );
+  CHECK( -1 == kv_reader_etl_string_to_char( test_node, nullptr, sizeof( data_to_read ) ) );
+  CHECK( -1 == kv_reader_etl_string_to_char( test_node, data_to_read, 0 ) );
+}
+
+TEST( kv_node, kv_writer_memcpy_invalid_inputs )
+{
+  /* Reset test data */
+  s_kv_cache_backing.simple_pod_data.value = 0;
+
+  test_node.datacache = nullptr;
+  test_node.dataSize  = 0;
+  test_node.pbFields  = SimplePODData_fields;
+
+  SimplePODData data_to_copy;
+  data_to_copy.value = 0x55;
+
+  CHECK( false == kv_writer_memcpy( test_node, nullptr, SimplePODData_size, true ) );
+  CHECK( false == kv_writer_memcpy( test_node, &data_to_copy, 0, true ) );
+  CHECK( false == kv_writer_memcpy( test_node, &data_to_copy, SimplePODData_size, true ) );
+}
+
+TEST( kv_node, kv_writer_char_to_etl_string_invalid_inputs )
+{
+  /* Reset test data */
+  s_kv_cache_backing.etl_string_data.clear();
+
+  test_node.datacache = nullptr;
+  test_node.dataSize  = 0;
+  test_node.pbFields  = StringData_fields;
+
+  etl::string<32> data_to_copy = "Hello, World!";
+
+  CHECK( false == kv_writer_char_to_etl_string( test_node, data_to_copy.c_str(), data_to_copy.size(), true ) );
+  CHECK( false == kv_writer_char_to_etl_string( test_node, nullptr, data_to_copy.size(), true ) );
+  CHECK( false == kv_writer_char_to_etl_string( test_node, data_to_copy.c_str(), 0, true ) );
 }
 
 /*-----------------------------------------------------------------------------
