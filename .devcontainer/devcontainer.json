@@ -6,6 +6,7 @@
     "context": "..",
     "dockerfile": "../Dockerfile"
   },
+  "postStartCommand": "poetry install",
   "customizations": {
     "vscode": {
       "extensions": [

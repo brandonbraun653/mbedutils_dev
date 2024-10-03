@@ -15,4 +15,7 @@ PB_BIND(KindaComplexPODData, KindaComplexPODData, AUTO)
 PB_BIND(StringData, StringData, AUTO)
 
 
+PB_BIND(GyroSensorData, GyroSensorData, AUTO)
+
+
 

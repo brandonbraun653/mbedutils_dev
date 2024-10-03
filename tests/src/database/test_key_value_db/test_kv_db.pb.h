@@ -25,6 +25,12 @@ typedef struct _StringData {
     char value[32];
 } StringData;
 
+typedef struct _GyroSensorData {
+    float x;
+    float y;
+    float z;
+} GyroSensorData;
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,9 +40,11 @@ extern "C" {
 #define SimplePODData_init_default               {0}
 #define KindaComplexPODData_init_default         {0, 0, 0, 0}
 #define StringData_init_default                  {""}
+#define GyroSensorData_init_default              {0, 0, 0}
 #define SimplePODData_init_zero                  {0}
 #define KindaComplexPODData_init_zero            {0, 0, 0, 0}
 #define StringData_init_zero                     {""}
+#define GyroSensorData_init_zero                 {0, 0, 0}
 
 /* Field tags (for use in manual encoding/decoding) */
 #define SimplePODData_value_tag                  1
@@ -45,6 +53,9 @@ extern "C" {
 #define KindaComplexPODData_value3_tag           3
 #define KindaComplexPODData_value4_tag           4
 #define StringData_value_tag                     1
+#define GyroSensorData_x_tag                     1
+#define GyroSensorData_y_tag                     2
+#define GyroSensorData_z_tag                     3
 
 /* Struct field encoding specification for nanopb */
 #define SimplePODData_FIELDLIST(X, a) \
@@ -65,16 +76,26 @@ X(a, STATIC,   REQUIRED, STRING,   value,             1)
 #define StringData_CALLBACK NULL
 #define StringData_DEFAULT NULL
 
+#define GyroSensorData_FIELDLIST(X, a) \
+X(a, STATIC,   REQUIRED, FLOAT,    x,                 1) \
+X(a, STATIC,   REQUIRED, FLOAT,    y,                 2) \
+X(a, STATIC,   REQUIRED, FLOAT,    z,                 3)
+#define GyroSensorData_CALLBACK NULL
+#define GyroSensorData_DEFAULT NULL
+
 extern const pb_msgdesc_t SimplePODData_msg;
 extern const pb_msgdesc_t KindaComplexPODData_msg;
 extern const pb_msgdesc_t StringData_msg;
+extern const pb_msgdesc_t GyroSensorData_msg;
 
 /* Defines for backwards compatibility with code written before nanopb-0.4.0 */
 #define SimplePODData_fields &SimplePODData_msg
 #define KindaComplexPODData_fields &KindaComplexPODData_msg
 #define StringData_fields &StringData_msg
+#define GyroSensorData_fields &GyroSensorData_msg
 
 /* Maximum encoded size of messages (where known) */
+#define GyroSensorData_size                      15
 #define KindaComplexPODData_size                 24
 #define SimplePODData_size                       3
 #define StringData_size                          33
@@ -121,6 +142,20 @@ struct MessageDescriptor<StringData> {
     static PB_INLINE_CONSTEXPR const pb_size_t size = StringData_size;
     static inline const pb_msgdesc_t* fields() {
         return &StringData_msg;
+    }
+    static inline bool has_msgid() {
+        return false;
+    }
+    static inline uint32_t msgid() {
+        return 0;
+    }
+};
+template <>
+struct MessageDescriptor<GyroSensorData> {
+    static PB_INLINE_CONSTEXPR const pb_size_t fields_array_length = 3;
+    static PB_INLINE_CONSTEXPR const pb_size_t size = GyroSensorData_size;
+    static inline const pb_msgdesc_t* fields() {
+        return &GyroSensorData_msg;
     }
     static inline bool has_msgid() {
         return false;
