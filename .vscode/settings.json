@@ -14,6 +14,5 @@
         "span": "cpp",
         "iterator": "cpp",
         "vector": "cpp"
-    },
-    "peacock.color": "#ff3d00"
+    }
 }

@@ -6,7 +6,15 @@
     "context": "..",
     "dockerfile": "../Dockerfile"
   },
+
+  // These users match the default user in the container
+  "remoteUser": "ubuntu",
+  "containerUser": "ubuntu",
+
+  // Ensure we have our python virtual environment ready once we start the container.
   "postStartCommand": "poetry install",
+
+  // Ensure certain extensions are available
   "customizations": {
     "vscode": {
       "extensions": [
