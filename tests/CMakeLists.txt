@@ -18,6 +18,8 @@ set(TESTING_INCLUDE_DIRECTORIES
     ${PROJECT_SOURCE_DIR}/../lib/cpputest/include
     ${PROJECT_SOURCE_DIR}/../lib/etl/include
     ${PROJECT_SOURCE_DIR}/expect
+    ${PROJECT_SOURCE_DIR}/fake
+    ${PROJECT_SOURCE_DIR}/harness
     ${PROJECT_SOURCE_DIR}/mock
 )
 

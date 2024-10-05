@@ -15,14 +15,21 @@ Includes
 #include <cstddef>
 #include <array>
 #include <etl/array.h>
+#include <etl/span.h>
 #include <etl/vector.h>
 #include <mbedutils/database.hpp>
 #include <mbedutils/drivers/memory/nvm/nor_flash.hpp>
 
 #include "CppUTest/TestHarness.h"
+#include "CppUTestExt/MockSupport.h"
+#include "CppUTestExt/MockSupportPlugin.h"
 #include "CppUTest/CommandLineTestRunner.h"
 #include "assert_expect.hpp"
+#include "atexit_expect.hpp"
+#include "atexit_harness.hpp"
 #include "nor_flash_expect.hpp"
+#include "nor_flash_file.hpp"
+#include "test_harness.hpp"
 #include "test_kv_db.pb.h"
 
 
@@ -60,11 +67,9 @@ struct KVRAMData
 Static Data
 -----------------------------------------------------------------------------*/
 
-static KVRAMData                      s_kv_cache_backing;
-static RamKVDB::Storage<20, 512>      s_kv_ram_storage;
-static NvmKVDB::Storage<20, 512>      s_kv_nvm_storage;
-static mb::memory::nor::DeviceDriver *s_flash_0_driver;
-static mb::memory::nor::DeviceDriver *s_flash_1_driver;
+static KVRAMData                     s_kv_cache_backing;
+static fake::memory::nor::FileFlash *s_flash_0_driver;
+static fake::memory::nor::FileFlash *s_flash_1_driver;
 
 extern "C"
 {
@@ -121,71 +126,6 @@ int main( int argc, char **argv )
 /*-----------------------------------------------------------------------------
 KVNode Tests
 -----------------------------------------------------------------------------*/
-
-/**
- * @brief Test harness for KVNode testing
- */
-class KVNodeHarness
-{
-public:
-  etl::span<uint8_t> transcode_buffer;
-
-  SanitizeFunc sanitize_delegate;
-  size_t       sanitize_callback_calls;
-
-  ValidateFunc validate_delegate;
-  size_t       validate_callback_calls;
-
-  WriteFunc write_delegate;
-  size_t    write_callback_calls;
-
-  ReadFunc read_delegate;
-  size_t   read_callback_calls;
-
-  void reset()
-  {
-    sanitize_callback_calls = 0;
-    sanitize_delegate       = SanitizeFunc::create<KVNodeHarness, &KVNodeHarness::_cb_sanitize>( *this );
-
-    validate_callback_calls = 0;
-    validate_delegate       = ValidateFunc::create<KVNodeHarness, &KVNodeHarness::_cb_validate>( *this );
-
-    write_callback_calls = 0;
-    write_delegate       = WriteFunc::create<KVNodeHarness, &KVNodeHarness::_cb_write>( *this );
-
-    read_callback_calls = 0;
-    read_delegate       = ReadFunc::create<KVNodeHarness, &KVNodeHarness::_cb_read>( *this );
-
-    _txcode_storage.fill( 0 );
-    transcode_buffer = { _txcode_storage.data(), _txcode_storage.size() };
-  }
-
-private:
-  etl::array<uint8_t, 512> _txcode_storage;
-
-  bool _cb_validate( const KVNode &node )
-  {
-    validate_callback_calls++;
-    return true;
-  }
-
-  void _cb_sanitize( KVNode &node )
-  {
-    sanitize_callback_calls++;
-  }
-
-  bool _cb_write( KVNode &node, const void *data, const size_t size )
-  {
-    write_callback_calls++;
-    return true;
-  }
-
-  int _cb_read( const KVNode &node, void *data, const size_t size )
-  {
-    read_callback_calls++;
-    return static_cast<int>( size );
-  }
-};
 
 TEST_GROUP( kv_node )
 {
@@ -509,41 +449,42 @@ RAM Key-Value Database Tests
 
 TEST_GROUP( db_kv_ram )
 {
-  RamKVDB         test_kvdb;
-  RamKVDB::Config test_config;
+  RamKVDB                   test_kvdb;
+  RamKVDB::Config           test_config;
+  RamKVDB::Storage<20, 512> test_storage;
 
   void setup()
   {
     /*-------------------------------------------------------------------------
     Configure a basic RAM database
     -------------------------------------------------------------------------*/
-    s_kv_ram_storage.nodes.clear();
-    s_kv_ram_storage.nodes.push_back( { .hashKey   = KEY_SIMPLE_POD_DATA,
-                                        .writer    = KVWriter_Memcpy,
-                                        .reader    = KVReader_Memcpy,
-                                        .datacache = &s_kv_cache_backing.simple_pod_data,
-                                        .pbFields  = SimplePODData_fields,
-                                        .dataSize  = SimplePODData_size,
-                                        .flags     = KV_FLAG_DEFAULT_VOLATILE } );
+    test_storage.nodes.clear();
+    test_storage.nodes.push_back( { .hashKey   = KEY_SIMPLE_POD_DATA,
+                                    .writer    = KVWriter_Memcpy,
+                                    .reader    = KVReader_Memcpy,
+                                    .datacache = &s_kv_cache_backing.simple_pod_data,
+                                    .pbFields  = SimplePODData_fields,
+                                    .dataSize  = SimplePODData_size,
+                                    .flags     = KV_FLAG_DEFAULT_VOLATILE } );
 
-    s_kv_ram_storage.nodes.push_back( { .hashKey   = KEY_KINDA_COMPLEX_POD_DATA,
-                                        .writer    = KVWriter_Memcpy,
-                                        .reader    = KVReader_Memcpy,
-                                        .datacache = &s_kv_cache_backing.kinda_complex_pod_data,
-                                        .pbFields  = KindaComplexPODData_fields,
-                                        .dataSize  = KindaComplexPODData_size,
-                                        .flags     = KV_FLAG_DEFAULT_VOLATILE } );
+    test_storage.nodes.push_back( { .hashKey   = KEY_KINDA_COMPLEX_POD_DATA,
+                                    .writer    = KVWriter_Memcpy,
+                                    .reader    = KVReader_Memcpy,
+                                    .datacache = &s_kv_cache_backing.kinda_complex_pod_data,
+                                    .pbFields  = KindaComplexPODData_fields,
+                                    .dataSize  = KindaComplexPODData_size,
+                                    .flags     = KV_FLAG_DEFAULT_VOLATILE } );
 
-    s_kv_ram_storage.nodes.push_back( { .hashKey   = KEY_ETL_STRING_DATA,
-                                        .writer    = KVWriter_EtlString,
-                                        .reader    = KVReader_EtlString,
-                                        .datacache = &s_kv_cache_backing.etl_string_data,
-                                        .pbFields  = StringData_fields,
-                                        .dataSize  = StringData_size,
-                                        .flags     = KV_FLAG_DEFAULT_VOLATILE } );
+    test_storage.nodes.push_back( { .hashKey   = KEY_ETL_STRING_DATA,
+                                    .writer    = KVWriter_EtlString,
+                                    .reader    = KVReader_EtlString,
+                                    .datacache = &s_kv_cache_backing.etl_string_data,
+                                    .pbFields  = StringData_fields,
+                                    .dataSize  = StringData_size,
+                                    .flags     = KV_FLAG_DEFAULT_VOLATILE } );
 
-    test_config.node_storage     = &s_kv_ram_storage.nodes;
-    test_config.transcode_buffer = s_kv_ram_storage.transcode_buffer;
+    test_config.node_storage     = &test_storage.nodes;
+    test_config.transcode_buffer = test_storage.transcode_buffer;
 
     /*-------------------------------------------------------------------------
     Initialize the database
@@ -578,8 +519,8 @@ TEST( db_kv_ram, configure_nominally )
   ---------------------------------------------------------------------------*/
   RamKVDB         kvdb;
   RamKVDB::Config config;
-  config.node_storage     = &s_kv_ram_storage.nodes;
-  config.transcode_buffer = { s_kv_ram_storage.transcode_buffer };
+  config.node_storage     = &test_storage.nodes;
+  config.transcode_buffer = { test_storage.transcode_buffer };
 
   /*---------------------------------------------------------------------------
   Call FUT
@@ -595,14 +536,14 @@ TEST( db_kv_ram, configure_bad_arguments )
   RamKVDB         kvdb;
   RamKVDB::Config config;
   config.node_storage     = nullptr;
-  config.transcode_buffer = { s_kv_ram_storage.transcode_buffer };
+  config.transcode_buffer = { test_storage.transcode_buffer };
 
   CHECK( DB_ERR_BAD_ARG == kvdb.configure( config ) );
 
   /*---------------------------------------------------------------------------
   Missing transcode buffer
   ---------------------------------------------------------------------------*/
-  config.node_storage     = &s_kv_ram_storage.nodes;
+  config.node_storage     = &test_storage.nodes;
   config.transcode_buffer = {};
 
   CHECK( DB_ERR_BAD_ARG == kvdb.configure( config ) );
@@ -610,10 +551,10 @@ TEST( db_kv_ram, configure_bad_arguments )
   /*---------------------------------------------------------------------------
   Bad KVNode in the storage
   ---------------------------------------------------------------------------*/
-  config.node_storage     = &s_kv_ram_storage.nodes;
-  config.transcode_buffer = { s_kv_ram_storage.transcode_buffer };
+  config.node_storage     = &test_storage.nodes;
+  config.transcode_buffer = { test_storage.transcode_buffer };
 
-  s_kv_ram_storage.nodes.push_back( {} );
+  test_storage.nodes.push_back( {} );
   CHECK( DB_ERR_BAD_ARG == kvdb.configure( config ) );
 }
 
@@ -624,8 +565,8 @@ TEST( db_kv_ram, configure_transcode_buffer_too_small )
   ---------------------------------------------------------------------------*/
   RamKVDB         kvdb;
   RamKVDB::Config config;
-  config.node_storage     = &s_kv_ram_storage.nodes;
-  config.transcode_buffer = { s_kv_ram_storage.transcode_buffer.data(), 1 };
+  config.node_storage     = &test_storage.nodes;
+  config.transcode_buffer = { test_storage.transcode_buffer.data(), 1 };
 
   /*---------------------------------------------------------------------------
   Call FUT
@@ -766,53 +707,139 @@ NVM Key-Value Database Tests
 
 TEST_GROUP( db_kv_nvm )
 {
-  NvmKVDB test_kvdb;
+  NvmKVDB                                 test_kvdb;
+  NvmKVDB::Config                         test_config;
+  NvmKVDB::Storage<20, 512>               test_storage;
+  harness::system::atexit::CallbackCopier atexit_callback_copier;
+
+  static constexpr char *const test_dflt_dev_name   = "nor_flash_0";
+  static constexpr char *const test_dflt_partition  = "kv_db";
 
   void setup()
   {
-    expect::mb$::memory$::nor$::DeviceDriver$::DeviceDriver$ctor( 2 );
-    s_flash_0_driver = new mb::memory::nor::DeviceDriver();
-    s_flash_1_driver = new mb::memory::nor::DeviceDriver();
+    s_flash_0_driver = new fake::memory::nor::FileFlash();
+    s_flash_1_driver = new fake::memory::nor::FileFlash();
 
     mock().clear();
     mock().ignoreOtherCalls();
+    mock().installCopier( "mb::system::atexit::Callback", atexit_callback_copier );
 
+    /*-------------------------------------------------------------------------
+    Configure the flash devices
+    -------------------------------------------------------------------------*/
+    mb::memory::nor::DeviceConfig flash_0_cfg;
+    flash_0_cfg.dev_attr.block_size = fdb_nor_flash0.blk_size;
+    flash_0_cfg.dev_attr.size       = fdb_nor_flash0.len;
+
+    s_flash_0_driver->open( "flash_0_test.bin", flash_0_cfg );
+
+    mb::memory::nor::DeviceConfig flash_1_cfg;
+    flash_1_cfg.dev_attr.block_size = fdb_nor_flash1.blk_size;
+    flash_1_cfg.dev_attr.size       = fdb_nor_flash1.len;
+
+    s_flash_1_driver->open( "flash_1_test.bin", flash_1_cfg );
+
+    /*-------------------------------------------------------------------------
+    Configure a basic RAM database
+    -------------------------------------------------------------------------*/
+    test_storage.kv_nodes.clear();
+    test_storage.kv_nodes.push_back( { .hashKey   = KEY_SIMPLE_POD_DATA,
+                                       .writer    = KVWriter_Memcpy,
+                                       .reader    = KVReader_Memcpy,
+                                       .datacache = &s_kv_cache_backing.simple_pod_data,
+                                       .pbFields  = SimplePODData_fields,
+                                       .dataSize  = SimplePODData_size,
+                                       .flags     = KV_FLAG_DEFAULT_VOLATILE } );
+
+    test_storage.kv_nodes.push_back( { .hashKey   = KEY_KINDA_COMPLEX_POD_DATA,
+                                       .writer    = KVWriter_Memcpy,
+                                       .reader    = KVReader_Memcpy,
+                                       .datacache = &s_kv_cache_backing.kinda_complex_pod_data,
+                                       .pbFields  = KindaComplexPODData_fields,
+                                       .dataSize  = KindaComplexPODData_size,
+                                       .flags     = KV_FLAG_DEFAULT_VOLATILE } );
+
+    test_storage.kv_nodes.push_back( { .hashKey   = KEY_ETL_STRING_DATA,
+                                       .writer    = KVWriter_EtlString,
+                                       .reader    = KVReader_EtlString,
+                                       .datacache = &s_kv_cache_backing.etl_string_data,
+                                       .pbFields  = StringData_fields,
+                                       .dataSize  = StringData_size,
+                                       .flags     = KV_FLAG_DEFAULT_VOLATILE } );
+
+    /*-------------------------------------------------------------------------
+    Configure the RAM database
+    -------------------------------------------------------------------------*/
     RamKVDB::Config ram_config;
-    ram_config.node_storage     = &s_kv_nvm_storage.nodes;
-    ram_config.transcode_buffer = etl::span<uint8_t>( s_kv_nvm_storage.transcode_buffer );
+    ram_config.node_storage     = &test_storage.kv_nodes;
+    ram_config.transcode_buffer = test_storage.transcode_buffer;
 
-    s_kv_nvm_storage.ramdb.configure( ram_config );
-    s_kv_nvm_storage.ramdb.insert( { .hashKey   = KEY_SIMPLE_POD_DATA,
-                                     .datacache = &s_kv_cache_backing.simple_pod_data,
-                                     .pbFields  = SimplePODData_fields,
-                                     .dataSize  = SimplePODData_size,
-                                     .flags     = KV_FLAG_DEFAULT_PERSISTENT } );
+    CHECK( DB_ERR_NONE == test_storage.kv_ram_db.configure( ram_config ) );
 
-    s_kv_nvm_storage.ramdb.insert( { .hashKey   = KEY_KINDA_COMPLEX_POD_DATA,
-                                     .datacache = &s_kv_cache_backing.kinda_complex_pod_data,
-                                     .pbFields  = KindaComplexPODData_fields,
-                                     .dataSize  = KindaComplexPODData_size,
-                                     .flags     = KV_FLAG_DEFAULT_PERSISTENT } );
+    /*-------------------------------------------------------------------------
+    Configure the NVM database
+    -------------------------------------------------------------------------*/
+    test_config.dev_name  = test_dflt_dev_name;
+    test_config.part_name = test_dflt_partition;
+    test_config.ram_kvdb  = &test_storage.kv_ram_db;
 
-    s_kv_nvm_storage.ramdb.insert( {} );
+    CHECK( DB_ERR_NONE == test_kvdb.configure( test_config ) );
   }
 
   void teardown()
   {
     mock().checkExpectations();
 
+    s_flash_0_driver->close();
+    s_flash_1_driver->close();
+
     delete s_flash_0_driver;
     delete s_flash_1_driver;
     mock().clear();
+    mock().removeAllComparatorsAndCopiers();
   }
 };
 
 TEST( db_kv_nvm, construction_of_invalid_database_fails )
 {
-  auto config = NvmKVDB::Config();
+  NvmKVDB::Config config;
 
-  config.dev_name       = "nor_flash_32";
-  config.partition_name = "partition_0";
+  /*---------------------------------------------------------------------------
+  Missing device name
+  ---------------------------------------------------------------------------*/
+  config.dev_name  = "";
+  config.part_name = "hello";
+  config.ram_kvdb  = test_config.ram_kvdb;
 
-  CHECK_FALSE( test_kvdb.configure( config ) );
+  CHECK( DB_ERR_BAD_ARG == test_kvdb.configure( config ) );
+
+  /*---------------------------------------------------------------------------
+  Missing partition name
+  ---------------------------------------------------------------------------*/
+  config.dev_name  = "hello";
+  config.part_name = "";
+  config.ram_kvdb  = test_config.ram_kvdb;
+
+  CHECK( DB_ERR_BAD_ARG == test_kvdb.configure( config ) );
+
+  /*---------------------------------------------------------------------------
+  Missing RAM KVDB
+  ---------------------------------------------------------------------------*/
+  config.dev_name  = "hello";
+  config.part_name = "hello";
+  config.ram_kvdb  = nullptr;
+
+  CHECK( DB_ERR_BAD_ARG == test_kvdb.configure( config ) );
 }
+
+/**
+ * @brief Validates the NVM database can be initialized with test setup defaults
+ */
+TEST( db_kv_nvm, init_with_test_defaults )
+{
+  expect::mb$::system$::atexit$::registerCallback( harness::system::atexit::stub_atexit_do_nothing, IgnoreParameter(),
+                                                   true );
+
+  CHECK( test_kvdb.init() );
+}
+

@@ -22,13 +22,16 @@ create_test_target(
         ${PROJECT_SOURCE_DIR}/../mbedutils/lib/nanopb/pb_encode.c
         ${PROJECT_SOURCE_DIR}/expect/assert_expect.cpp
         ${PROJECT_SOURCE_DIR}/expect/assert_intf_expect.cpp
+        ${PROJECT_SOURCE_DIR}/expect/atexit_expect.cpp
         ${PROJECT_SOURCE_DIR}/expect/gpio_intf_expect.cpp
         ${PROJECT_SOURCE_DIR}/expect/mutex_intf_expect.cpp
         ${PROJECT_SOURCE_DIR}/expect/nor_flash_expect.cpp
         ${PROJECT_SOURCE_DIR}/expect/spi_intf_expect.cpp
         ${PROJECT_SOURCE_DIR}/expect/time_intf_expect.cpp
+        ${PROJECT_SOURCE_DIR}/fake/nor_flash_file.cpp
         ${PROJECT_SOURCE_DIR}/mock/assert_mock.cpp
         ${PROJECT_SOURCE_DIR}/mock/assert_intf_mock.cpp
+        ${PROJECT_SOURCE_DIR}/mock/atexit_mock.cpp
         ${PROJECT_SOURCE_DIR}/mock/gpio_intf_mock.cpp
         ${PROJECT_SOURCE_DIR}/mock/mutex_intf_mock.cpp
         ${PROJECT_SOURCE_DIR}/mock/nor_flash_mock.cpp
