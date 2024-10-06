@@ -18,4 +18,7 @@ PB_BIND(StringData, StringData, AUTO)
 PB_BIND(GyroSensorData, GyroSensorData, AUTO)
 
 
+PB_BIND(VariableSizedPODData, VariableSizedPODData, AUTO)
+
+
 

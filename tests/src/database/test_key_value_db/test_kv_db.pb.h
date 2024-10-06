@@ -31,6 +31,12 @@ typedef struct _GyroSensorData {
     float z;
 } GyroSensorData;
 
+typedef PB_BYTES_ARRAY_T(32) VariableSizedPODData_data_t;
+typedef struct _VariableSizedPODData {
+    uint8_t value;
+    VariableSizedPODData_data_t data;
+} VariableSizedPODData;
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -41,10 +47,12 @@ extern "C" {
 #define KindaComplexPODData_init_default         {0, 0, 0, 0}
 #define StringData_init_default                  {""}
 #define GyroSensorData_init_default              {0, 0, 0}
+#define VariableSizedPODData_init_default        {0, {0, {0}}}
 #define SimplePODData_init_zero                  {0}
 #define KindaComplexPODData_init_zero            {0, 0, 0, 0}
 #define StringData_init_zero                     {""}
 #define GyroSensorData_init_zero                 {0, 0, 0}
+#define VariableSizedPODData_init_zero           {0, {0, {0}}}
 
 /* Field tags (for use in manual encoding/decoding) */
 #define SimplePODData_value_tag                  1
@@ -56,6 +64,8 @@ extern "C" {
 #define GyroSensorData_x_tag                     1
 #define GyroSensorData_y_tag                     2
 #define GyroSensorData_z_tag                     3
+#define VariableSizedPODData_value_tag           1
+#define VariableSizedPODData_data_tag            2
 
 /* Struct field encoding specification for nanopb */
 #define SimplePODData_FIELDLIST(X, a) \
@@ -83,23 +93,32 @@ X(a, STATIC,   REQUIRED, FLOAT,    z,                 3)
 #define GyroSensorData_CALLBACK NULL
 #define GyroSensorData_DEFAULT NULL
 
+#define VariableSizedPODData_FIELDLIST(X, a) \
+X(a, STATIC,   REQUIRED, UINT32,   value,             1) \
+X(a, STATIC,   REQUIRED, BYTES,    data,              2)
+#define VariableSizedPODData_CALLBACK NULL
+#define VariableSizedPODData_DEFAULT NULL
+
 extern const pb_msgdesc_t SimplePODData_msg;
 extern const pb_msgdesc_t KindaComplexPODData_msg;
 extern const pb_msgdesc_t StringData_msg;
 extern const pb_msgdesc_t GyroSensorData_msg;
+extern const pb_msgdesc_t VariableSizedPODData_msg;
 
 /* Defines for backwards compatibility with code written before nanopb-0.4.0 */
 #define SimplePODData_fields &SimplePODData_msg
 #define KindaComplexPODData_fields &KindaComplexPODData_msg
 #define StringData_fields &StringData_msg
 #define GyroSensorData_fields &GyroSensorData_msg
+#define VariableSizedPODData_fields &VariableSizedPODData_msg
 
 /* Maximum encoded size of messages (where known) */
 #define GyroSensorData_size                      15
 #define KindaComplexPODData_size                 24
 #define SimplePODData_size                       3
 #define StringData_size                          33
-#define TEST_KV_DB_PB_H_MAX_SIZE                 StringData_size
+#define TEST_KV_DB_PB_H_MAX_SIZE                 VariableSizedPODData_size
+#define VariableSizedPODData_size                37
 
 #ifdef __cplusplus
 } /* extern "C" */
@@ -156,6 +175,20 @@ struct MessageDescriptor<GyroSensorData> {
     static PB_INLINE_CONSTEXPR const pb_size_t size = GyroSensorData_size;
     static inline const pb_msgdesc_t* fields() {
         return &GyroSensorData_msg;
+    }
+    static inline bool has_msgid() {
+        return false;
+    }
+    static inline uint32_t msgid() {
+        return 0;
+    }
+};
+template <>
+struct MessageDescriptor<VariableSizedPODData> {
+    static PB_INLINE_CONSTEXPR const pb_size_t fields_array_length = 2;
+    static PB_INLINE_CONSTEXPR const pb_size_t size = VariableSizedPODData_size;
+    static inline const pb_msgdesc_t* fields() {
+        return &VariableSizedPODData_msg;
     }
     static inline bool has_msgid() {
         return false;

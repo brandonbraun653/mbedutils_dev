@@ -1,6 +1,6 @@
 /******************************************************************************
  *  File Name:
- *    test_harness.hpp
+ *    test_kv_db_harness.hpp
  *
  *  Description:
  *    KVDB test harness
@@ -21,9 +21,84 @@ Includes
 #include <mbedutils/database.hpp>
 #include <mbedutils/drivers/memory/nvm/nor_flash.hpp>
 #include <mbedutils/drivers/system/atexit.hpp>
+#include "test_kv_db.pb.h"
 
 using namespace mb::db;
 
+/*-----------------------------------------------------------------------------
+Enumerations
+-----------------------------------------------------------------------------*/
+
+/**
+ * @brief Enumerated keys for interacting with the KVDB
+ */
+enum KVAppKeys : HashKey
+{
+  KEY_SIMPLE_POD_DATA,
+  KEY_KINDA_COMPLEX_POD_DATA,
+  KEY_ETL_STRING_DATA,
+  KEY_GYRO_DATA,
+  KEY_FIXED_SIZE_NON_SERIALIZABLE_DATA,
+  KEY_VARIABLE_SIZE_NON_SERIALIZABLE_DATA,
+  KEY_VARIABLE_SIZED_POD_DATA,
+
+  KEY_ENUM_COUNT
+};
+
+/*-----------------------------------------------------------------------------
+Structures
+-----------------------------------------------------------------------------*/
+
+union ExtraData
+{
+  int32_t  int_val;
+  uint32_t uint_val;
+  float    float_val;
+  double   double_val;
+  char     char_val;
+};
+
+struct FixedSizeNonSerializableData
+{
+  uint32_t  value;
+  float     float_val;
+  uint8_t   _pad[ 16 ];
+  char      char_data;
+  double    double_val;
+  int16_t   short_val;
+  uint64_t  long_val;
+  bool      bool_flag;
+  ExtraData extra_data;
+};
+
+/**
+ * @brief Data to be stored that doesn't have a NanoPB descriptor.
+ *
+ * This would represent some application data that is never sent off the
+ * device and the user didn't really want to write a NanoPB descriptor for.
+ * It will be a less efficient storage mechanism, but it's useful.
+ */
+struct VariableSizeNonSerializableData
+{
+  uint32_t value;
+  float    float_val;
+  uint8_t  string_len;
+  char     string_data[ 127 ]; /* Variable sized data. This is what NanoPB could help with. */
+};
+
+/**
+ * @brief RAM memory backing for the KVDB
+ */
+struct KVRAMData
+{
+  SimplePODData                   simple_pod_data;         /**< KEY_SIMPLE_POD_DATA */
+  KindaComplexPODData             kinda_complex_pod_data;  /**< KEY_KINDA_COMPLEX_POD_DATA */
+  etl::string<32>                 etl_string_data;         /**< KEY_ETL_STRING_DATA */
+  GyroSensorData                  gyro_data;               /**< KEY_GYRO_DATA */
+  FixedSizeNonSerializableData    fixed_on_device_data;    /**< KEY_FIXED_SIZE_NON_SERIALIZABLE_DATA */
+  VariableSizeNonSerializableData variable_on_device_data; /**< KEY_VARIABLE_SIZE_NON_SERIALIZABLE_DATA */
+  VariableSizedPODData            variable_pod_data;       /**< KEY_VARIABLE_SIZED_POD_DATA */
+};
 
 /*-----------------------------------------------------------------------------
 Classes

@@ -21,3 +21,8 @@ message GyroSensorData {
     required float y = 2;
     required float z = 3;
 }
+
+message VariableSizedPODData {
+    required uint32 value = 1 [(nanopb).int_size = IS_8];
+    required bytes data = 2 [(nanopb).max_size = 32];
+}
