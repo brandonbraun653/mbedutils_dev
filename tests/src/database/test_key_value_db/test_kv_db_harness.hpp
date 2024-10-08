@@ -41,6 +41,7 @@ enum KVAppKeys : HashKey
   KEY_FIXED_SIZE_NON_SERIALIZABLE_DATA,
   KEY_VARIABLE_SIZE_NON_SERIALIZABLE_DATA,
   KEY_VARIABLE_SIZED_POD_DATA,
+  KEY_RAM_CACHE_ONLY_DATA,
 
   KEY_ENUM_COUNT
 };
@@ -98,6 +99,19 @@ struct KVRAMData
   FixedSizeNonSerializableData    fixed_on_device_data;    /**< KEY_FIXED_SIZE_NON_SERIALIZABLE_DATA */
   VariableSizeNonSerializableData variable_on_device_data; /**< KEY_VARIABLE_SIZE_NON_SERIALIZABLE_DATA */
   VariableSizedPODData            variable_pod_data;       /**< KEY_VARIABLE_SIZED_POD_DATA */
+  FixedSizeNonSerializableData    ram_cache_only_data;     /**< KEY_RAM_CACHE_ONLY_DATA */
+
+  void clear()
+  {
+    simple_pod_data        = SimplePODData_init_default;
+    kinda_complex_pod_data = KindaComplexPODData_init_default;
+    etl_string_data.clear();
+    gyro_data               = GyroSensorData_init_default;
+    fixed_on_device_data    = {};
+    variable_on_device_data = {};
+    variable_pod_data       = VariableSizedPODData_init_default;
+    ram_cache_only_data     = {};
+  }
 };
 
 /*-----------------------------------------------------------------------------
@@ -170,4 +184,4 @@ private:
 };
 
 
-#endif  /* !KVDB_TESTING_HARNESS_HPP */
+#endif /* !KVDB_TESTING_HARNESS_HPP */

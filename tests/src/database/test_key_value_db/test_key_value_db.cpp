@@ -554,6 +554,21 @@ TEST( db_kv_ram, init )
 
   // KVDB was configured with some default data in the setup() method.
   CHECK( test_kvdb.init() );
+  CHECK( test_kvdb.init() ); // Coverage test
+
+  /*---------------------------------------------------------------------------
+  Calling configure again should fail (coverage test)
+  ---------------------------------------------------------------------------*/
+  CHECK( DB_ERR_NOT_AVAILABLE == test_kvdb.configure( test_config ) );
+}
+
+TEST( db_kv_ram, init_unable_to_acquire_mutex_resource )
+{
+  expect::mb$::osal$::createRecursiveMutex( IgnoreParameter(), false );
+  CHECK( false == test_kvdb.init() );
+
+  expect::mb$::osal$::createRecursiveMutex( IgnoreParameter(), true );
+  CHECK( test_kvdb.init() );
 }
 
 TEST( db_kv_ram, find_insert_exist_remove )
@@ -681,6 +696,32 @@ TEST( db_kv_ram, encode_decode_data )
 NVM Key-Value Database Tests
 -----------------------------------------------------------------------------*/
 
+TEST_GROUP( db_kv_nvm_setup )
+{
+  NvmKVDB test_kvdb;
+
+  void setup()
+  {
+  }
+
+  void teardown()
+  {
+    mock().checkExpectations();
+    mock().clear();
+  }
+};
+
+TEST( db_kv_nvm_setup, check_function_calls_have_no_side_effects_before_init )
+{
+  /*---------------------------------------------------------------------------
+  If any calls occur other than a return, we'll learn about it from mock.
+  ---------------------------------------------------------------------------*/
+  test_kvdb.deinit();
+  test_kvdb.remove( 0 );
+  CHECK( false == test_kvdb.exists( 0 ) );
+}
+
+
 TEST_GROUP( db_kv_nvm )
 {
   NvmKVDB                                 test_kvdb;
@@ -696,6 +737,7 @@ TEST_GROUP( db_kv_nvm )
     /*-------------------------------------------------------------------------
     Initialize the virtual backing memory
     -------------------------------------------------------------------------*/
+    s_kv_cache_backing.clear();
     s_flash_0_driver = new fake::memory::nor::FileFlash();
     s_flash_1_driver = new fake::memory::nor::FileFlash();
 
@@ -710,12 +752,14 @@ TEST_GROUP( db_kv_nvm )
     flash_0_cfg.dev_attr.block_size = fdb_nor_flash0.blk_size;
     flash_0_cfg.dev_attr.size       = fdb_nor_flash0.len;
 
+    std::remove("flash_0_test.bin");
     s_flash_0_driver->open( "flash_0_test.bin", flash_0_cfg );
 
     mb::memory::nor::DeviceConfig flash_1_cfg;
     flash_1_cfg.dev_attr.block_size = fdb_nor_flash1.blk_size;
     flash_1_cfg.dev_attr.size       = fdb_nor_flash1.len;
 
+    std::remove("flash_1_test.bin");
     s_flash_1_driver->open( "flash_1_test.bin", flash_1_cfg );
 
     /*-------------------------------------------------------------------------
@@ -800,6 +844,46 @@ TEST_GROUP( db_kv_nvm )
   }
 };
 
+TEST( db_kv_nvm, init_unable_to_acquire_mutex_resources )
+{
+  NvmKVDB nvm_db;
+  RamKVDB ram_db;
+
+  mock().clear();
+  mock().ignoreOtherCalls();
+
+  /*-------------------------------------------------------------------------
+  Configure the RAM database
+  -------------------------------------------------------------------------*/
+  RamKVDB::Config ram_config;
+  ram_config.node_storage     = &test_storage.kv_nodes;
+  ram_config.transcode_buffer = test_storage.transcode_buffer;
+
+  CHECK( DB_ERR_NONE == ram_db.configure( ram_config ) );
+
+  /*-------------------------------------------------------------------------
+  Configure the NVM database
+  -------------------------------------------------------------------------*/
+  test_config.dev_name  = test_dflt_dev_name;
+  test_config.part_name = test_dflt_partition;
+  test_config.ram_kvdb  = &ram_db;
+
+  CHECK( DB_ERR_NONE == nvm_db.configure( test_config ) );
+
+  /*---------------------------------------------------------------------------
+  Force a failure in the call to RamKVDB::init()
+  ---------------------------------------------------------------------------*/
+  expect::mb$::osal$::createRecursiveMutex( IgnoreParameter(), false );
+  CHECK( !nvm_db.init() );
+
+  /*---------------------------------------------------------------------------
+  Now allow the RamKVDB::init() to pass, but the NvmKVDB::init() to fail
+  ---------------------------------------------------------------------------*/
+  expect::mb$::osal$::createRecursiveMutex( IgnoreParameter(), true );
+  expect::mb$::osal$::createRecursiveMutex( IgnoreParameter(), false );
+  CHECK( !nvm_db.init() );
+}
+
 TEST( db_kv_nvm, construction_of_invalid_database_fails )
 {
   NvmKVDB         kvdb;
@@ -866,6 +950,32 @@ TEST( db_kv_nvm, simple_write_then_read )
   CHECK( 0x55 == data_to_read.value );
 }
 
+TEST( db_kv_nvm, check_for_nonexistant_node )
+{
+  CHECK( false == test_kvdb.exists( std::numeric_limits<HashKey>::max() ) );
+}
+
+TEST( db_kv_nvm, check_for_existence_ram_cache_only )
+{
+  KVNode new_node;
+  new_node.hashKey = KEY_RAM_CACHE_ONLY_DATA;
+  new_node.datacache = &s_kv_cache_backing.ram_cache_only_data;
+  new_node.dataSize = sizeof( s_kv_cache_backing.ram_cache_only_data );
+  new_node.pbFields = nullptr;
+  new_node.writer = KVWriter_Memcpy;
+  new_node.reader = KVReader_Memcpy;
+  new_node.flags  = KV_FLAG_DEFAULT_VOLATILE;
+
+  CHECK( test_kvdb.insert( new_node ) );
+  CHECK( test_kvdb.exists( KEY_RAM_CACHE_ONLY_DATA ) );
+}
+
+TEST( db_kv_nvm, calling_configure_after_configuration )
+{
+  // The setup step has already called "configure" successfully once
+  CHECK( DB_ERR_NOT_AVAILABLE == test_kvdb.configure( test_config ) );
+}
+
 TEST( db_kv_nvm, rw_policy_0 )
 {
   /*---------------------------------------------------------------------------
@@ -883,7 +993,7 @@ TEST( db_kv_nvm, rw_policy_0 )
   new_node.flags     = KV_FLAG_PERSISTENT | KV_FLAG_CACHE_POLICY_WRITE_BACK | KV_FLAG_CACHE_POLICY_READ_THROUGH;
 
   CHECK( test_kvdb.insert( new_node ) );
-  CHECK( test_kvdb.exists( KEY_VARIABLE_SIZED_POD_DATA ) ); // Strong consistency
+  CHECK( test_kvdb.exists( KEY_VARIABLE_SIZED_POD_DATA ) );
 
   /*---------------------------------------------------------------------------
   Write some data
@@ -929,3 +1039,129 @@ TEST( db_kv_nvm, rw_policy_0 )
   test_kvdb.read( KEY_VARIABLE_SIZED_POD_DATA, &read_data, sizeof( read_data ) );
   CHECK( 0 == memcmp( &write_data, &read_data, sizeof( write_data ) ) );
 }
+
+TEST( db_kv_nvm, rw_policy_1 )
+{
+  /*---------------------------------------------------------------------------
+  Construct a new node with a complex caching policy:
+    - Immediate write back to NVM
+    - Read through to only pull data from NVM
+  ---------------------------------------------------------------------------*/
+  KVNode new_node;
+  new_node.hashKey   = KEY_VARIABLE_SIZED_POD_DATA;
+  new_node.writer    = KVWriter_Memcpy;
+  new_node.reader    = KVReader_Memcpy;
+  new_node.datacache = &s_kv_cache_backing.variable_pod_data;
+  new_node.pbFields  = VariableSizedPODData_fields;
+  new_node.dataSize  = VariableSizedPODData_size;
+  new_node.flags     = KV_FLAG_PERSISTENT | KV_FLAG_CACHE_POLICY_WRITE_THROUGH | KV_FLAG_CACHE_POLICY_READ_THROUGH;
+
+  CHECK( test_kvdb.insert( new_node ) );
+  CHECK( test_kvdb.exists( KEY_VARIABLE_SIZED_POD_DATA ) );
+
+  /*---------------------------------------------------------------------------
+  Write some data
+  ---------------------------------------------------------------------------*/
+  VariableSizedPODData write_data;
+  memset( &write_data, 0, sizeof( write_data ) );
+
+  write_data.value           = rand() % 0xFF;
+  write_data.data.size       = 3;
+  write_data.data.bytes[ 0 ] = rand() % 0xFF;
+  write_data.data.bytes[ 1 ] = rand() % 0xFF;
+  write_data.data.bytes[ 2 ] = rand() % 0xFF;
+
+  CHECK( sizeof( write_data ) == test_kvdb.write( KEY_VARIABLE_SIZED_POD_DATA, &write_data, sizeof( write_data ) ) );
+
+  /*---------------------------------------------------------------------------
+  Validate the dirty bit is NOT set.
+  ---------------------------------------------------------------------------*/
+  auto *node = test_kvdb.find( KEY_VARIABLE_SIZED_POD_DATA );
+  CHECK( nullptr != node );
+  CHECK( false == ( node->flags & KV_FLAG_DIRTY ) );
+
+  /*---------------------------------------------------------------------------
+  Perform the read, pulling directly from NVM and reflect the new state.
+  ---------------------------------------------------------------------------*/
+  VariableSizedPODData read_data;
+  memset( &read_data, 0, sizeof( read_data ) );
+
+  test_kvdb.read( KEY_VARIABLE_SIZED_POD_DATA, &read_data, sizeof( read_data ) );
+  CHECK( 0 == memcmp( &write_data, &read_data, sizeof( write_data ) ) );
+}
+
+TEST( db_kv_nvm, rw_policy_2 )
+{
+  /*---------------------------------------------------------------------------
+  Construct a new node with a complex caching policy:
+    - Immediate write back to NVM
+    - Read only from cache
+  ---------------------------------------------------------------------------*/
+  KVNode new_node;
+  new_node.hashKey   = KEY_VARIABLE_SIZED_POD_DATA;
+  new_node.writer    = KVWriter_Memcpy;
+  new_node.reader    = KVReader_Memcpy;
+  new_node.datacache = &s_kv_cache_backing.variable_pod_data;
+  new_node.pbFields  = VariableSizedPODData_fields;
+  new_node.dataSize  = VariableSizedPODData_size;
+  new_node.flags     = KV_FLAG_PERSISTENT | KV_FLAG_CACHE_POLICY_WRITE_THROUGH | KV_FLAG_CACHE_POLICY_READ_CACHE;
+
+  CHECK( test_kvdb.insert( new_node ) );
+  CHECK( test_kvdb.exists( KEY_VARIABLE_SIZED_POD_DATA ) );
+
+  /*---------------------------------------------------------------------------
+  Write some data. First validate it's not in the cache.
+  ---------------------------------------------------------------------------*/
+  VariableSizedPODData write_data;
+  memset( &write_data, 0, sizeof( write_data ) );
+
+  write_data.value           = rand() % 0xFF;
+  write_data.data.size       = 3;
+  write_data.data.bytes[ 0 ] = rand() % 0xFF;
+  write_data.data.bytes[ 1 ] = rand() % 0xFF;
+  write_data.data.bytes[ 2 ] = rand() % 0xFF;
+
+  CHECK( 0 != memcmp( &s_kv_cache_backing.variable_pod_data, &write_data, sizeof( write_data ) ) );
+  CHECK( sizeof( write_data ) == test_kvdb.write( KEY_VARIABLE_SIZED_POD_DATA, &write_data, sizeof( write_data ) ) );
+
+  /*---------------------------------------------------------------------------
+  Validate the dirty bit is NOT set.
+  ---------------------------------------------------------------------------*/
+  auto *node = test_kvdb.find( KEY_VARIABLE_SIZED_POD_DATA );
+  CHECK( nullptr != node );
+  CHECK( false == ( node->flags & KV_FLAG_DIRTY ) );
+
+  /*---------------------------------------------------------------------------
+  Check the RAM cache directly to ensure the data was committed
+  ---------------------------------------------------------------------------*/
+  CHECK( 0 == memcmp( &s_kv_cache_backing.variable_pod_data, &write_data, sizeof( write_data ) ) );
+
+  /*---------------------------------------------------------------------------
+  Do the read. This is a less interesting test as you can't tell explicitly if
+  the desired path was taken due to no mocks in the call tree.
+  ---------------------------------------------------------------------------*/
+  VariableSizedPODData read_data;
+  memset( &read_data, 0, sizeof( read_data ) );
+
+  test_kvdb.read( KEY_VARIABLE_SIZED_POD_DATA, &read_data, sizeof( read_data ) );
+  CHECK( 0 == memcmp( &write_data, &read_data, sizeof( write_data ) ) );
+}
+
+TEST( db_kv_nvm, rw_policy_3 )
+{
+
+}
+
+
+TEST_GROUP( db_multithread )
+{
+  void setup()
+  {
+
+  }
+
+  void teardown()
+  {
+
+  }
+};
