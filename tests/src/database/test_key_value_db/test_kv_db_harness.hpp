@@ -15,6 +15,7 @@
 /*-----------------------------------------------------------------------------
 Includes
 -----------------------------------------------------------------------------*/
+#include <random>
 #include <etl/array.h>
 #include <etl/span.h>
 #include <etl/vector.h>
@@ -59,6 +60,7 @@ union ExtraData
   char     char_val;
 };
 
+
 struct FixedSizeNonSerializableData
 {
   uint32_t  value;
@@ -70,6 +72,28 @@ struct FixedSizeNonSerializableData
   uint64_t  long_val;
   bool      bool_flag;
   ExtraData extra_data;
+
+  void random()
+  {
+    std::random_device                      rd;
+    std::mt19937                            gen( rd() );
+    std::uniform_int_distribution<uint32_t> dist_uint32;
+    std::uniform_real_distribution<float>   dist_float( 0.0f, 1.0f );
+    std::uniform_real_distribution<double>  dist_double( 0.0, 1.0 );
+    std::uniform_int_distribution<int16_t>  dist_int16;
+    std::uniform_int_distribution<uint64_t> dist_uint64;
+    std::uniform_int_distribution<int>      dist_char( 0, 255 );
+    std::uniform_int_distribution<int>      dist_bool( 0, 1 );
+
+    value              = dist_uint32( gen );
+    float_val          = dist_float( gen );
+    char_data          = static_cast<char>( dist_char( gen ) );
+    double_val         = dist_double( gen );
+    short_val          = dist_int16( gen );
+    long_val           = dist_uint64( gen );
+    bool_flag          = dist_bool( gen );
+    extra_data.int_val = dist_uint32( gen );
+  }
 };
 
 /**

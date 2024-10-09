@@ -719,6 +719,8 @@ TEST( db_kv_nvm_setup, check_function_calls_have_no_side_effects_before_init )
   test_kvdb.deinit();
   test_kvdb.remove( 0 );
   CHECK( false == test_kvdb.exists( 0 ) );
+  CHECK( -1 == test_kvdb.read( 0, nullptr, 0 ) );
+  CHECK( -1 == test_kvdb.write( 0, nullptr, 0 ) );
 }
 
 
@@ -930,6 +932,13 @@ TEST( db_kv_nvm, insert_bad_node_fails )
   CHECK( false == test_kvdb.insert( new_node ) );
 }
 
+TEST( db_kv_nvm, remove_a_node )
+{
+  CHECK( test_kvdb.exists( KEY_SIMPLE_POD_DATA ) );
+  test_kvdb.remove( KEY_SIMPLE_POD_DATA );
+  CHECK( false == test_kvdb.exists( KEY_SIMPLE_POD_DATA ) );
+}
+
 TEST( db_kv_nvm, simple_write_then_read )
 {
   /*---------------------------------------------------------------------------
@@ -952,22 +961,91 @@ TEST( db_kv_nvm, simple_write_then_read )
 
 TEST( db_kv_nvm, check_for_nonexistant_node )
 {
+  /*---------------------------------------------------------------------------
+  Standard checks for non-existant nodes
+  ---------------------------------------------------------------------------*/
   CHECK( false == test_kvdb.exists( std::numeric_limits<HashKey>::max() ) );
+
+  /*---------------------------------------------------------------------------
+  Unable to read due to non-existant node
+  ---------------------------------------------------------------------------*/
+  uint32_t data;
+  CHECK( -1 == test_kvdb.read( std::numeric_limits<HashKey>::max(), &data, sizeof( data ) ) );
+
+  /*---------------------------------------------------------------------------
+  Unable to write due to non-existant node
+  ---------------------------------------------------------------------------*/
+  CHECK( -1 == test_kvdb.write( std::numeric_limits<HashKey>::max(), &data, sizeof( data ) ) );
 }
 
-TEST( db_kv_nvm, check_for_existence_ram_cache_only )
+TEST( db_kv_nvm, validate_ram_cache_nonserializable_data_interactions )
 {
   KVNode new_node;
-  new_node.hashKey = KEY_RAM_CACHE_ONLY_DATA;
+  new_node.hashKey   = KEY_RAM_CACHE_ONLY_DATA;
   new_node.datacache = &s_kv_cache_backing.ram_cache_only_data;
-  new_node.dataSize = sizeof( s_kv_cache_backing.ram_cache_only_data );
-  new_node.pbFields = nullptr;
-  new_node.writer = KVWriter_Memcpy;
-  new_node.reader = KVReader_Memcpy;
-  new_node.flags  = KV_FLAG_DEFAULT_VOLATILE;
+  new_node.dataSize  = sizeof( s_kv_cache_backing.ram_cache_only_data );
+  new_node.pbFields  = nullptr;
+  new_node.writer    = KVWriter_Memcpy;
+  new_node.reader    = KVReader_Memcpy;
+  new_node.flags     = KV_FLAG_DEFAULT_VOLATILE;
 
   CHECK( test_kvdb.insert( new_node ) );
   CHECK( test_kvdb.exists( KEY_RAM_CACHE_ONLY_DATA ) );
+
+  /*---------------------------------------------------------------------------
+  Write some data
+  ---------------------------------------------------------------------------*/
+  FixedSizeNonSerializableData write_data;
+  write_data.random();
+
+  CHECK( sizeof( write_data ) == test_kvdb.write( KEY_RAM_CACHE_ONLY_DATA, &write_data, sizeof( write_data ) ) );
+
+  /*---------------------------------------------------------------------------
+  Read the data back out
+  ---------------------------------------------------------------------------*/
+  FixedSizeNonSerializableData read_data;
+  memset( &read_data, 0, sizeof( read_data ) );
+
+  CHECK( sizeof( read_data ) == test_kvdb.read( KEY_RAM_CACHE_ONLY_DATA, &read_data, sizeof( read_data ) ) );
+  CHECK( 0 == memcmp( &write_data, &read_data, sizeof( write_data ) ) );
+}
+
+TEST( db_kv_nvm, validate_persistent_nonserializable_data_interactions )
+{
+  KVNode new_node;
+  new_node.hashKey   = KEY_FIXED_SIZE_NON_SERIALIZABLE_DATA;
+  new_node.datacache = &s_kv_cache_backing.fixed_on_device_data;
+  new_node.dataSize  = sizeof( s_kv_cache_backing.fixed_on_device_data );
+  new_node.pbFields  = nullptr;
+  new_node.writer    = KVWriter_Memcpy;
+  new_node.reader    = KVReader_Memcpy;
+  new_node.flags     = KV_FLAG_PERSISTENT | KV_FLAG_CACHE_POLICY_READ_THROUGH | KV_FLAG_CACHE_POLICY_WRITE_BACK;
+
+  CHECK( test_kvdb.insert( new_node ) );
+  CHECK( test_kvdb.exists( KEY_FIXED_SIZE_NON_SERIALIZABLE_DATA ) );
+
+  /*---------------------------------------------------------------------------
+  Write some data
+  ---------------------------------------------------------------------------*/
+  FixedSizeNonSerializableData write_data;
+  write_data.random();
+
+  CHECK( sizeof( write_data ) == test_kvdb.write( KEY_FIXED_SIZE_NON_SERIALIZABLE_DATA, &write_data, sizeof( write_data ) ) );
+
+  /*---------------------------------------------------------------------------
+  Flush to ensure we commit
+  ---------------------------------------------------------------------------*/
+  CHECK( test_kvdb.find( KEY_FIXED_SIZE_NON_SERIALIZABLE_DATA )->flags & KV_FLAG_DIRTY );
+  test_kvdb.flush();
+
+  /*---------------------------------------------------------------------------
+  Read the data back out
+  ---------------------------------------------------------------------------*/
+  FixedSizeNonSerializableData read_data;
+  memset( &read_data, 0, sizeof( read_data ) );
+
+  CHECK( sizeof( read_data ) == test_kvdb.read( KEY_FIXED_SIZE_NON_SERIALIZABLE_DATA, &read_data, sizeof( read_data ) ) );
+  CHECK( 0 == memcmp( &write_data, &read_data, sizeof( write_data ) ) );
 }
 
 TEST( db_kv_nvm, calling_configure_after_configuration )
@@ -1149,7 +1227,143 @@ TEST( db_kv_nvm, rw_policy_2 )
 
 TEST( db_kv_nvm, rw_policy_3 )
 {
+  /*---------------------------------------------------------------------------
+  Construct a new node with a complex caching policy:
+    - Write policy doesn't matter
+    - Read sync to ensure RAM cache is up to date with any changes in NVM
+  ---------------------------------------------------------------------------*/
+  KVNode new_node;
+  new_node.hashKey   = KEY_VARIABLE_SIZED_POD_DATA;
+  new_node.writer    = KVWriter_Memcpy;
+  new_node.reader    = KVReader_Memcpy;
+  new_node.datacache = &s_kv_cache_backing.variable_pod_data;
+  new_node.pbFields  = VariableSizedPODData_fields;
+  new_node.dataSize  = VariableSizedPODData_size;
+  new_node.flags     = KV_FLAG_PERSISTENT | KV_FLAG_CACHE_POLICY_WRITE_THROUGH | KV_FLAG_CACHE_POLICY_READ_SYNC;
 
+  CHECK( test_kvdb.insert( new_node ) );
+  CHECK( test_kvdb.exists( KEY_VARIABLE_SIZED_POD_DATA ) );
+
+  /*---------------------------------------------------------------------------
+  Write some data
+  ---------------------------------------------------------------------------*/
+  VariableSizedPODData write_data;
+  memset( &write_data, 0, sizeof( write_data ) );
+
+  write_data.value           = rand() % 0xFF;
+  write_data.data.size       = 3;
+  write_data.data.bytes[ 0 ] = rand() % 0xFF;
+  write_data.data.bytes[ 1 ] = rand() % 0xFF;
+  write_data.data.bytes[ 2 ] = rand() % 0xFF;
+
+  CHECK( test_kvdb.write( KEY_VARIABLE_SIZED_POD_DATA, &write_data, sizeof( write_data ) ) );
+  test_kvdb.flush();
+
+  /*---------------------------------------------------------------------------
+  Reset the cache to ensure the read sync is working. We should pull from NVM.
+  ---------------------------------------------------------------------------*/
+  auto stored_node = test_kvdb.find( KEY_VARIABLE_SIZED_POD_DATA );
+  memset( stored_node->datacache, 0, stored_node->dataSize );
+  CHECK( 0 != memcmp( stored_node->datacache, &write_data, stored_node->dataSize ) );
+
+  /*---------------------------------------------------------------------------
+  Perform the read-sync. This should pull from NVM and update the cache.
+  ---------------------------------------------------------------------------*/
+  VariableSizedPODData read_data;
+  memset( &read_data, 0, sizeof( read_data ) );
+
+  test_kvdb.read( KEY_VARIABLE_SIZED_POD_DATA, &read_data, sizeof( read_data ) );
+  CHECK( 0 == memcmp( &write_data, &read_data, sizeof( write_data ) ) );
+}
+
+TEST( db_kv_nvm, rw_policy_missing )
+{
+  /*---------------------------------------------------------------------------
+  Construct a new node with a complex caching policy:
+    - Write policy doesn't exist
+    - Read policy doesn't exist
+  ---------------------------------------------------------------------------*/
+  KVNode new_node;
+  new_node.hashKey   = KEY_VARIABLE_SIZED_POD_DATA;
+  new_node.writer    = KVWriter_Memcpy;
+  new_node.reader    = KVReader_Memcpy;
+  new_node.datacache = &s_kv_cache_backing.variable_pod_data;
+  new_node.pbFields  = VariableSizedPODData_fields;
+  new_node.dataSize  = VariableSizedPODData_size;
+  new_node.flags     = KV_FLAG_PERSISTENT;
+
+  // Insert will attempt to write to NVM, which will fail due to no write policy
+  CHECK( false == test_kvdb.insert( new_node ) );
+
+  // Temporarily insert the node with policies just to register it
+  new_node.flags = KV_FLAG_PERSISTENT | KV_FLAG_CACHE_POLICY_READ_THROUGH | KV_FLAG_CACHE_POLICY_WRITE_BACK;
+  CHECK( test_kvdb.insert( new_node ) );
+  CHECK( test_kvdb.exists( KEY_VARIABLE_SIZED_POD_DATA ) );
+
+  // Remove the flags on the node
+  auto *node = test_kvdb.find( KEY_VARIABLE_SIZED_POD_DATA );
+  node->flags = KV_FLAG_PERSISTENT;
+  CHECK( test_kvdb.exists( KEY_VARIABLE_SIZED_POD_DATA ) );
+
+  /*---------------------------------------------------------------------------
+  Write some data. This should fail as there is no write policy.
+  ---------------------------------------------------------------------------*/
+  VariableSizedPODData write_data;
+  CHECK( -1 == test_kvdb.write( KEY_VARIABLE_SIZED_POD_DATA, &write_data, sizeof( write_data ) ) );
+
+  /*---------------------------------------------------------------------------
+  Read the data back out. This should fail as well due to no read policy.
+  ---------------------------------------------------------------------------*/
+  VariableSizedPODData read_data;
+  CHECK( -1 == test_kvdb.read( KEY_VARIABLE_SIZED_POD_DATA, &read_data, sizeof( read_data ) ) );
+}
+
+/*-----------------------------------------------------------------------------
+Utility Functions
+-----------------------------------------------------------------------------*/
+
+TEST_GROUP( db_utility )
+{
+  void setup()
+  {
+  }
+
+  void teardown()
+  {
+  }
+};
+
+
+TEST( db_utility, flashdb_error_to_string )
+{
+  STRCMP_EQUAL( "No error", fdb_err_to_str( FDB_NO_ERR ) );
+  STRCMP_EQUAL( "Erase error", fdb_err_to_str( FDB_ERASE_ERR ) );
+  STRCMP_EQUAL( "Write error", fdb_err_to_str( FDB_WRITE_ERR ) );
+  STRCMP_EQUAL( "Read error", fdb_err_to_str( FDB_READ_ERR ) );
+  STRCMP_EQUAL( "Partition not found", fdb_err_to_str( FDB_PART_NOT_FOUND ) );
+  STRCMP_EQUAL( "Key-Value name error", fdb_err_to_str( FDB_KV_NAME_ERR ) );
+  STRCMP_EQUAL( "Key-Value name exists", fdb_err_to_str( FDB_KV_NAME_EXIST ) );
+  STRCMP_EQUAL( "Saved full", fdb_err_to_str( FDB_SAVED_FULL ) );
+  STRCMP_EQUAL( "Initialization failed", fdb_err_to_str( FDB_INIT_FAILED ) );
+  STRCMP_EQUAL( "Unknown error", fdb_err_to_str( static_cast<fdb_err_t>( 0xFF ) ) );
+}
+
+TEST( db_utility, hashing_utilities )
+{
+  /*---------------------------------------------------------------------------
+  String hashing and consistency
+  ---------------------------------------------------------------------------*/
+  CHECK( hash( "hello!" ) );
+  CHECK( hash( "hello!" ) == hash( "hello!" ) );
+
+  /*---------------------------------------------------------------------------
+  Object hashing and consistency
+  ---------------------------------------------------------------------------*/
+  FixedSizeNonSerializableData data;
+  data.random();
+
+  CHECK( hash( &data, sizeof( data ) ) );
+  CHECK( hash( &data, sizeof( data ) ) == hash( &data, sizeof( data ) ) );
 }
 
 

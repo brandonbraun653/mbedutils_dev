@@ -24,12 +24,14 @@ set(TESTING_INCLUDE_DIRECTORIES
 )
 
 add_subdirectory(src/database/test_key_value_db)
+add_subdirectory(src/database/test_key_value_db_mt)
 add_subdirectory(src/memory/nvm/test_nor_adesto)
 add_subdirectory(src/memory/nvm/test_nor_flash)
 
 add_custom_target(BuildAllTests)
 add_dependencies(BuildAllTests
   TestKeyValueDatabase
+  TestKeyValueDatabaseMT
   TestNorAdesto
   TestNorFlash
 )
