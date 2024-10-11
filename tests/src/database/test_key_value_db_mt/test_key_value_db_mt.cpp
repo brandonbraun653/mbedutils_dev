@@ -11,14 +11,17 @@
 /*-----------------------------------------------------------------------------
 Includes
 -----------------------------------------------------------------------------*/
-#include <cstdint>
-#include <cstddef>
 #include <array>
+#include <cstddef>
+#include <cstdint>
+#include <condition_variable>
 #include <etl/array.h>
 #include <etl/span.h>
 #include <etl/vector.h>
 #include <mbedutils/database.hpp>
 #include <mbedutils/drivers/memory/nvm/nor_flash.hpp>
+#include <memory>
+#include <thread>
 
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
@@ -44,6 +47,9 @@ Static Data
 static KVRAMData                     s_kv_cache_backing;
 static fake::memory::nor::FileFlash *s_flash_0_driver;
 static fake::memory::nor::FileFlash *s_flash_1_driver;
+
+static std::mutex s_kvdb_cv_mtx;
+static std::condition_variable       s_kvdb_cv;
 
 extern "C"
 {
@@ -94,7 +100,33 @@ Tests
 
 int main( int argc, char **argv )
 {
+  MemoryLeakWarningPlugin::turnOffNewDeleteOverloads();
   return RUN_ALL_TESTS( argc, argv );
+}
+
+/**
+ * @brief Test function for multi-threaded reading from the NVM Key-Value Database.
+ *
+ * This function is intended to be run in a separate thread to test the
+ * multi-threaded read capability of the NVM Key-Value Database. It reads a
+ * value associated with a given key from the database and checks if the
+ * read value matches the expected value.
+ *
+ * @param kvdb Pointer to the NVM Key-Value Database instance.
+ * @param key The key associated with the value to be read.
+ * @param value The expected value to be read from the database.
+ */
+void test_thread_multi_reader( NvmKVDB *kvdb, KVAppKeys key, uint32_t value, uint32_t iterations )
+{
+  std::unique_lock<std::mutex> lock( s_kvdb_cv_mtx );
+  s_kvdb_cv.wait( lock );
+
+  for( uint32_t i = 0; i < iterations; i++ )
+  {
+    uint32_t readback = 0;
+    CHECK( kvdb->read( key, &readback, sizeof( readback ) ) );
+    CHECK_EQUAL( value, readback );
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -103,19 +135,164 @@ KVNode Tests
 
 TEST_GROUP( db_mt )
 {
+  NvmKVDB                                   test_kvdb;
+  NvmKVDB::Config                           test_config;
+  NvmKVDB::Storage<20, 512>                 test_storage;
+  harness::system::atexit::CallbackCopier   atexit_callback_copier;
+  std::vector<std::unique_ptr<std::thread>> test_threads;
+
+  static constexpr char *const test_dflt_dev_name   = "nor_flash_0";
+  static constexpr char *const test_dflt_partition  = "kv_db";
+
   void setup()
   {
+    /*-------------------------------------------------------------------------
+    Initialize the virtual backing memory
+    -------------------------------------------------------------------------*/
+    s_kv_cache_backing.clear();
+    s_flash_0_driver = new fake::memory::nor::FileFlash();
+    s_flash_1_driver = new fake::memory::nor::FileFlash();
 
+    mock().clear();
+    mock().ignoreOtherCalls();
+    mock().installCopier( "mb::system::atexit::Callback", atexit_callback_copier );
+
+    /*-------------------------------------------------------------------------
+    Configure the flash devices
+    -------------------------------------------------------------------------*/
+    mb::memory::nor::DeviceConfig flash_0_cfg;
+    flash_0_cfg.dev_attr.block_size = fdb_nor_flash0.blk_size;
+    flash_0_cfg.dev_attr.size       = fdb_nor_flash0.len;
+
+    std::remove("flash_0_test.bin");
+    s_flash_0_driver->open( "flash_0_test.bin", flash_0_cfg );
+
+    mb::memory::nor::DeviceConfig flash_1_cfg;
+    flash_1_cfg.dev_attr.block_size = fdb_nor_flash1.blk_size;
+    flash_1_cfg.dev_attr.size       = fdb_nor_flash1.len;
+
+    std::remove("flash_1_test.bin");
+    s_flash_1_driver->open( "flash_1_test.bin", flash_1_cfg );
+
+    /*-------------------------------------------------------------------------
+    Inject some default KV test nodes
+    -------------------------------------------------------------------------*/
+    test_storage.kv_nodes.clear();
+    test_storage.kv_nodes.push_back( { .hashKey   = KEY_SIMPLE_POD_DATA,
+                                       .writer    = KVWriter_Memcpy,
+                                       .reader    = KVReader_Memcpy,
+                                       .datacache = &s_kv_cache_backing.simple_pod_data,
+                                       .pbFields  = SimplePODData_fields,
+                                       .dataSize  = SimplePODData_size,
+                                       .flags     = KV_FLAG_DEFAULT_VOLATILE } );
+
+    test_storage.kv_nodes.push_back( { .hashKey   = KEY_KINDA_COMPLEX_POD_DATA,
+                                       .writer    = KVWriter_Memcpy,
+                                       .reader    = KVReader_Memcpy,
+                                       .datacache = &s_kv_cache_backing.kinda_complex_pod_data,
+                                       .pbFields  = KindaComplexPODData_fields,
+                                       .dataSize  = KindaComplexPODData_size,
+                                       .flags     = KV_FLAG_DEFAULT_VOLATILE } );
+
+    test_storage.kv_nodes.push_back( { .hashKey   = KEY_ETL_STRING_DATA,
+                                       .writer    = KVWriter_EtlString,
+                                       .reader    = KVReader_EtlString,
+                                       .datacache = &s_kv_cache_backing.etl_string_data,
+                                       .pbFields  = StringData_fields,
+                                       .dataSize  = StringData_size,
+                                       .flags     = KV_FLAG_DEFAULT_VOLATILE } );
+
+    /*-------------------------------------------------------------------------
+    Configure the RAM database
+    -------------------------------------------------------------------------*/
+    RamKVDB::Config ram_config;
+    ram_config.node_storage     = &test_storage.kv_nodes;
+    ram_config.transcode_buffer = test_storage.transcode_buffer;
+
+    CHECK( DB_ERR_NONE == test_storage.kv_ram_db.configure( ram_config ) );
+
+    /*-------------------------------------------------------------------------
+    Configure the NVM database
+    -------------------------------------------------------------------------*/
+    test_config.dev_name  = test_dflt_dev_name;
+    test_config.part_name = test_dflt_partition;
+    test_config.ram_kvdb  = &test_storage.kv_ram_db;
+
+    CHECK( DB_ERR_NONE == test_kvdb.configure( test_config ) );
+
+    /*-------------------------------------------------------------------------
+    Initialize the NVM database
+    -------------------------------------------------------------------------*/
+    expect::mb$::system$::atexit$::registerCallback( harness::system::atexit::stub_atexit_do_nothing, IgnoreParameter(), true );
+
+    CHECK( test_kvdb.init() );
   }
 
   void teardown()
   {
+    mock().checkExpectations();
 
+    /*-------------------------------------------------------------------------
+    Tear down the NVM database
+    -------------------------------------------------------------------------*/
+    test_kvdb.deinit();
+
+    /*-------------------------------------------------------------------------
+    Destroy virtual backing memory
+    -------------------------------------------------------------------------*/
+    s_flash_0_driver->close();
+    s_flash_1_driver->close();
+
+    delete s_flash_0_driver;
+    delete s_flash_1_driver;
+
+    /*-------------------------------------------------------------------------
+    Tear down the test data
+    -------------------------------------------------------------------------*/
+    mock().clear();
+    mock().removeAllComparatorsAndCopiers();
   }
 };
 
 
-TEST( db_mt, multi_writer_single_reader )
+TEST( db_mt, multi_reader_no_writer )
 {
- CHECK( false );
+  /*---------------------------------------------------------------------------
+  Set up the test data
+  ---------------------------------------------------------------------------*/
+  SimplePODData simple_pod_data;
+  simple_pod_data.value = 42;
+
+  CHECK( test_kvdb.write( KEY_SIMPLE_POD_DATA, &simple_pod_data, sizeof( simple_pod_data ) ) );
+
+  /*---------------------------------------------------------------------------
+  Start a bunch of reader threads
+  ---------------------------------------------------------------------------*/
+  int thread_count = rand() % 10 + 5;
+  for( int i = 0; i < thread_count; ++i )
+  {
+    test_threads.push_back(
+        std::make_unique<std::thread>( test_thread_multi_reader, &test_kvdb, KEY_SIMPLE_POD_DATA, 42, 12 ) );
+    auto start = std::chrono::steady_clock::now();
+    while (!test_threads.back()->joinable())
+    {
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+      if (std::chrono::steady_clock::now() - start > std::chrono::milliseconds(100))
+      {
+        break;
+      }
+    }
+  }
+
+  std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
+
+  s_kvdb_cv.notify_all();
+
+  for( auto &thread : test_threads )
+  {
+    if( thread->joinable() )
+    {
+      thread->join();
+    }
+  }
 }

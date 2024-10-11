@@ -54,14 +54,14 @@ MockExpectedCall& destroySmphr(unsigned int __numCalls__, CppUMockGen::Parameter
 } } }
 
 namespace expect { namespace mb$ { namespace osal$ {
-MockExpectedCall& allocateSemahpore(CppUMockGen::Parameter<mb::osal::mb_smphr_t &> s, CppUMockGen::Parameter<const size_t> maxCount, CppUMockGen::Parameter<const size_t> initialCount, bool __return__)
+MockExpectedCall& allocateSemaphore(CppUMockGen::Parameter<mb::osal::mb_smphr_t &> s, CppUMockGen::Parameter<const size_t> maxCount, CppUMockGen::Parameter<const size_t> initialCount, bool __return__)
 {
-    return allocateSemahpore(1, s, maxCount, initialCount, __return__);
+    return allocateSemaphore(1, s, maxCount, initialCount, __return__);
 }
-MockExpectedCall& allocateSemahpore(unsigned int __numCalls__, CppUMockGen::Parameter<mb::osal::mb_smphr_t &> s, CppUMockGen::Parameter<const size_t> maxCount, CppUMockGen::Parameter<const size_t> initialCount, bool __return__)
+MockExpectedCall& allocateSemaphore(unsigned int __numCalls__, CppUMockGen::Parameter<mb::osal::mb_smphr_t &> s, CppUMockGen::Parameter<const size_t> maxCount, CppUMockGen::Parameter<const size_t> initialCount, bool __return__)
 {
     bool __ignoreOtherParams__ = false;
-    MockExpectedCall& __expectedCall__ = mock().expectNCalls(__numCalls__, "mb::osal::allocateSemahpore");
+    MockExpectedCall& __expectedCall__ = mock().expectNCalls(__numCalls__, "mb::osal::allocateSemaphore");
     if(s.isIgnored()) { __ignoreOtherParams__ = true; } else { __expectedCall__.withPointerParameter("s", &s.getValue()); }
     if(maxCount.isIgnored()) { __ignoreOtherParams__ = true; } else { __expectedCall__.withUnsignedLongIntParameter("maxCount", maxCount.getValue()); }
     if(initialCount.isIgnored()) { __ignoreOtherParams__ = true; } else { __expectedCall__.withUnsignedLongIntParameter("initialCount", initialCount.getValue()); }

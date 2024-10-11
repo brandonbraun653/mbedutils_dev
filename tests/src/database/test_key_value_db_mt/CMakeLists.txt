@@ -9,6 +9,7 @@ create_test_target(
         ${PROJECT_SOURCE_DIR}/../mbedutils/src/database/db_kv_mgr.cpp
     DEPENDENT_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/../test_key_value_db/test_kv_db.pb.c
+        ${PROJECT_SOURCE_DIR}/../lib/mbedutils_sim/mutex_stl.cpp
         ${PROJECT_SOURCE_DIR}/../mbedutils/lib/flashdb/port/fal/src/fal.c
         ${PROJECT_SOURCE_DIR}/../mbedutils/lib/flashdb/port/fal/src/fal_flash.c
         ${PROJECT_SOURCE_DIR}/../mbedutils/lib/flashdb/port/fal/src/fal_partition.c
@@ -39,7 +40,6 @@ create_test_target(
         ./../test_key_value_db
         ${TESTING_INCLUDE_DIRECTORIES}
     LIBRARIES
-        mbedutils_lib_stl
         mbedutils_headers
         mbedutils_internal_headers
     EXPORT_DIR ${CMAKE_CURRENT_BINARY_DIR}

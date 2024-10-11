@@ -22,7 +22,6 @@ create_test_target(
     INCLUDE_DIRS
         ${TESTING_INCLUDE_DIRECTORIES}
     LIBRARIES
-        mbedutils_lib_stl
         mbedutils_headers
         mbedutils_internal_headers
     EXPORT_DIR ${CMAKE_CURRENT_BINARY_DIR}

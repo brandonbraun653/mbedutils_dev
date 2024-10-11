@@ -28,8 +28,8 @@ MockExpectedCall& destroySmphr(unsigned int __numCalls__, CppUMockGen::Parameter
 } } }
 
 namespace expect { namespace mb$ { namespace osal$ {
-MockExpectedCall& allocateSemahpore(CppUMockGen::Parameter<mb::osal::mb_smphr_t &> s, CppUMockGen::Parameter<const size_t> maxCount, CppUMockGen::Parameter<const size_t> initialCount, bool __return__);
-MockExpectedCall& allocateSemahpore(unsigned int __numCalls__, CppUMockGen::Parameter<mb::osal::mb_smphr_t &> s, CppUMockGen::Parameter<const size_t> maxCount, CppUMockGen::Parameter<const size_t> initialCount, bool __return__);
+MockExpectedCall& allocateSemaphore(CppUMockGen::Parameter<mb::osal::mb_smphr_t &> s, CppUMockGen::Parameter<const size_t> maxCount, CppUMockGen::Parameter<const size_t> initialCount, bool __return__);
+MockExpectedCall& allocateSemaphore(unsigned int __numCalls__, CppUMockGen::Parameter<mb::osal::mb_smphr_t &> s, CppUMockGen::Parameter<const size_t> maxCount, CppUMockGen::Parameter<const size_t> initialCount, bool __return__);
 } } }
 
 namespace expect { namespace mb$ { namespace osal$ {

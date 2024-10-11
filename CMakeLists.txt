@@ -22,12 +22,15 @@ find_program(GENHTML_PATH genhtml)
 
 set(ARCHIVE_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/archive)
 set(COVERAGE_OUTPUT_DIR ${ARCHIVE_OUTPUT_DIR}/coverage)
+set(MBEDUTILS_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/mbedutils/src)
+set(MBEDUTILS_SRC_DIR_SIM ${CMAKE_CURRENT_SOURCE_DIR}/lib/mbedutils_sim)
 add_custom_target(UnitTests
-  COMMAND ${CMAKE_MAKE_PROGRAM} BuildAllTests
+  COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --cyan "Building all tests..."
+  COMMAND ${CMAKE_COMMAND} -E env ${CMAKE_MAKE_PROGRAM} BuildAllTests
   COMMAND mkdir -p "${ARCHIVE_OUTPUT_DIR}"
   COMMAND mkdir -p "${COVERAGE_OUTPUT_DIR}"
   COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_BINARY_DIR} ctest --output-on-failure --no-compress-output --output-junit ${ARCHIVE_OUTPUT_DIR}/junit_results.xml
-  COMMAND ${GCOVR_PATH} -r ${CMAKE_CURRENT_SOURCE_DIR}/mbedutils/src --object-directory=${CMAKE_CURRENT_BINARY_DIR} --html-details -o ${COVERAGE_OUTPUT_DIR}/index.html
+  COMMAND ${GCOVR_PATH} --root ${CMAKE_CURRENT_SOURCE_DIR} --filter ${MBEDUTILS_SRC_DIR} --filter ${MBEDUTILS_SRC_DIR_SIM} --object-directory=${CMAKE_CURRENT_BINARY_DIR} --html-details -o ${COVERAGE_OUTPUT_DIR}/index.html
   COMMAND echo "Coverage report generated at ${COVERAGE_OUTPUT_DIR}/index.html"
   COMMAND echo "JUnit test results generated at ${ARCHIVE_OUTPUT_DIR}/junit_results.xml"
   WORKING_DIRECTORY ${PROJECT_BINARY_DIR}

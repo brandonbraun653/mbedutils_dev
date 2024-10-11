@@ -25,9 +25,9 @@ void mb::osal::destroySmphr(mb::osal::mb_smphr_t & s)
     mock().actualCall("mb::osal::destroySmphr").withPointerParameter("s", &s);
 }
 
-bool mb::osal::allocateSemahpore(mb::osal::mb_smphr_t & s, const size_t maxCount, const size_t initialCount)
+bool mb::osal::allocateSemaphore(mb::osal::mb_smphr_t & s, const size_t maxCount, const size_t initialCount)
 {
-    return mock().actualCall("mb::osal::allocateSemahpore").withPointerParameter("s", &s).withUnsignedLongIntParameter("maxCount", maxCount).withUnsignedLongIntParameter("initialCount", initialCount).returnBoolValue();
+    return mock().actualCall("mb::osal::allocateSemaphore").withPointerParameter("s", &s).withUnsignedLongIntParameter("maxCount", maxCount).withUnsignedLongIntParameter("initialCount", initialCount).returnBoolValue();
 }
 
 void mb::osal::deallocateSemaphore(mb::osal::mb_smphr_t & s)
