@@ -48,8 +48,6 @@ static KVRAMData                     s_kv_cache_backing;
 static fake::memory::nor::FileFlash *s_flash_0_driver;
 static fake::memory::nor::FileFlash *s_flash_1_driver;
 
-static std::mutex s_kvdb_cv_mtx;
-static std::condition_variable       s_kvdb_cv;
 
 extern "C"
 {
@@ -104,30 +102,6 @@ int main( int argc, char **argv )
   return RUN_ALL_TESTS( argc, argv );
 }
 
-/**
- * @brief Test function for multi-threaded reading from the NVM Key-Value Database.
- *
- * This function is intended to be run in a separate thread to test the
- * multi-threaded read capability of the NVM Key-Value Database. It reads a
- * value associated with a given key from the database and checks if the
- * read value matches the expected value.
- *
- * @param kvdb Pointer to the NVM Key-Value Database instance.
- * @param key The key associated with the value to be read.
- * @param value The expected value to be read from the database.
- */
-void test_thread_multi_reader( NvmKVDB *kvdb, KVAppKeys key, uint32_t value, uint32_t iterations )
-{
-  std::unique_lock<std::mutex> lock( s_kvdb_cv_mtx );
-  s_kvdb_cv.wait( lock );
-
-  for( uint32_t i = 0; i < iterations; i++ )
-  {
-    uint32_t readback = 0;
-    CHECK( kvdb->read( key, &readback, sizeof( readback ) ) );
-    CHECK_EQUAL( value, readback );
-  }
-}
 
 /*-----------------------------------------------------------------------------
 KVNode Tests
@@ -140,9 +114,13 @@ TEST_GROUP( db_mt )
   NvmKVDB::Storage<20, 512>                 test_storage;
   harness::system::atexit::CallbackCopier   atexit_callback_copier;
   std::vector<std::unique_ptr<std::thread>> test_threads;
+  std::mutex                                test_thread_cv_mtx;
+  std::condition_variable                   test_thread_cv;
+  int                                       test_thread_count;
+  int                                       test_thread_iterations;
 
-  static constexpr char *const test_dflt_dev_name   = "nor_flash_0";
-  static constexpr char *const test_dflt_partition  = "kv_db";
+  const std::string test_dflt_dev_name  = "nor_flash_0";
+  const std::string test_dflt_partition = "kv_db";
 
   void setup()
   {
@@ -164,14 +142,14 @@ TEST_GROUP( db_mt )
     flash_0_cfg.dev_attr.block_size = fdb_nor_flash0.blk_size;
     flash_0_cfg.dev_attr.size       = fdb_nor_flash0.len;
 
-    std::remove("flash_0_test.bin");
+    std::remove( "flash_0_test.bin" );
     s_flash_0_driver->open( "flash_0_test.bin", flash_0_cfg );
 
     mb::memory::nor::DeviceConfig flash_1_cfg;
     flash_1_cfg.dev_attr.block_size = fdb_nor_flash1.blk_size;
     flash_1_cfg.dev_attr.size       = fdb_nor_flash1.len;
 
-    std::remove("flash_1_test.bin");
+    std::remove( "flash_1_test.bin" );
     s_flash_1_driver->open( "flash_1_test.bin", flash_1_cfg );
 
     /*-------------------------------------------------------------------------
@@ -214,8 +192,8 @@ TEST_GROUP( db_mt )
     /*-------------------------------------------------------------------------
     Configure the NVM database
     -------------------------------------------------------------------------*/
-    test_config.dev_name  = test_dflt_dev_name;
-    test_config.part_name = test_dflt_partition;
+    test_config.dev_name  = test_dflt_dev_name.c_str();
+    test_config.part_name = test_dflt_partition.c_str();
     test_config.ram_kvdb  = &test_storage.kv_ram_db;
 
     CHECK( DB_ERR_NONE == test_kvdb.configure( test_config ) );
@@ -226,10 +204,28 @@ TEST_GROUP( db_mt )
     expect::mb$::system$::atexit$::registerCallback( harness::system::atexit::stub_atexit_do_nothing, IgnoreParameter(), true );
 
     CHECK( test_kvdb.init() );
+
+    /*-------------------------------------------------------------------------
+    Clear the thread vector
+    -------------------------------------------------------------------------*/
+    test_threads.clear();
+    test_thread_count      = rand() % 20 + 5;
+    test_thread_iterations = rand() % 20 + 5;
   }
 
   void teardown()
   {
+    /*-------------------------------------------------------------------------
+    Stop all the test threads
+    -------------------------------------------------------------------------*/
+    for( auto &thread : test_threads )
+    {
+      if( thread->joinable() )
+      {
+        thread->join();
+      }
+    }
+
     mock().checkExpectations();
 
     /*-------------------------------------------------------------------------
@@ -252,6 +248,54 @@ TEST_GROUP( db_mt )
     mock().clear();
     mock().removeAllComparatorsAndCopiers();
   }
+
+  /**
+   * @brief Test function for multi-threaded reading from the NVM Key-Value Database.
+   *
+   * This function is intended to be run in a separate thread to test the
+   * multi-threaded read capability of the NVM Key-Value Database. It reads a
+   * value associated with a given key from the database and checks if the
+   * read value matches the expected value.
+   *
+   * @param kvdb Pointer to the NVM Key-Value Database instance.
+   * @param key The key associated with the value to be read.
+   * @param value The expected value to be read from the database.
+   */
+  void test_thread_multi_reader( NvmKVDB * kvdb, KVAppKeys key, uint32_t value, uint32_t iterations )
+  {
+    std::unique_lock<std::mutex> lock( test_thread_cv_mtx );
+    test_thread_cv.wait( lock );
+
+    for( uint32_t i = 0; i < iterations; i++ )
+    {
+      uint32_t readback = 0;
+      CHECK( kvdb->read( key, &readback, sizeof( readback ) ) );
+      CHECK_EQUAL( value, readback );
+    }
+  }
+
+  /**
+   * @brief Test function for multi-threaded writing to the NVM Key-Value Database.
+   *
+   * This function is intended to be run in a separate thread to test the
+   * multi-threaded write capability of the NVM Key-Value Database. It writes a
+   * value associated with a given key to the database and checks if the write
+   * operation was successful.
+   *
+   * @param kvdb Pointer to the NVM Key-Value Database instance.
+   * @param key The key associated with the value to be written.
+   * @param value The value to be written to the database.
+   */
+  void test_thread_multi_writer( NvmKVDB * kvdb, KVAppKeys key, void *data, size_t size, uint32_t iterations )
+  {
+    std::unique_lock<std::mutex> lock( test_thread_cv_mtx );
+    test_thread_cv.wait( lock );
+
+    for( uint32_t i = 0; i < iterations; i++ )
+    {
+      CHECK( kvdb->write( key, data, size ) );
+    }
+  }
 };
 
 
@@ -268,31 +312,74 @@ TEST( db_mt, multi_reader_no_writer )
   /*---------------------------------------------------------------------------
   Start a bunch of reader threads
   ---------------------------------------------------------------------------*/
-  int thread_count = rand() % 10 + 5;
-  for( int i = 0; i < thread_count; ++i )
+  for( int i = 0; i < test_thread_count; ++i )
   {
-    test_threads.push_back(
-        std::make_unique<std::thread>( test_thread_multi_reader, &test_kvdb, KEY_SIMPLE_POD_DATA, 42, 12 ) );
-    auto start = std::chrono::steady_clock::now();
-    while (!test_threads.back()->joinable())
-    {
-      std::this_thread::sleep_for(std::chrono::milliseconds(10));
-      if (std::chrono::steady_clock::now() - start > std::chrono::milliseconds(100))
-      {
-        break;
-      }
-    }
+    auto thread_func = std::bind( &TEST_GROUP_CppUTestGroupdb_mt::test_thread_multi_reader, this, &test_kvdb,
+                                  KEY_SIMPLE_POD_DATA, simple_pod_data.value, test_thread_iterations );
+    test_threads.push_back( std::make_unique<std::thread>( thread_func ) );
   }
 
   std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
+  test_thread_cv.notify_all();
+}
 
-  s_kvdb_cv.notify_all();
+TEST( db_mt, multi_writer_no_reader )
+{
+  /*---------------------------------------------------------------------------
+  Set up the test data
+  ---------------------------------------------------------------------------*/
+  SimplePODData simple_pod_data;
+  simple_pod_data.value = 42;
 
-  for( auto &thread : test_threads )
+  /*---------------------------------------------------------------------------
+  Start a bunch of writer threads
+  ---------------------------------------------------------------------------*/
+  for( int i = 0; i < test_thread_count; ++i )
   {
-    if( thread->joinable() )
-    {
-      thread->join();
-    }
+    auto thread_func = std::bind( &TEST_GROUP_CppUTestGroupdb_mt::test_thread_multi_writer, this, &test_kvdb,
+                                  KEY_SIMPLE_POD_DATA, &simple_pod_data, sizeof( simple_pod_data ), test_thread_iterations );
+    test_threads.push_back( std::make_unique<std::thread>( thread_func ) );
   }
+
+  std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
+  test_thread_cv.notify_all();
+}
+
+/**
+ * @brief Test case for multi-threaded read/write operations on the NVM Key-Value Database.
+ *
+ * In this particular test case, I'm not interested in data consistency but more
+ * so the ability of the database to handle multiple read/write operations without
+ * crashing or throwing exceptions.
+ */
+TEST( db_mt, multi_writer_multi_reader )
+{
+  /*---------------------------------------------------------------------------
+  Set up the test data
+  ---------------------------------------------------------------------------*/
+  SimplePODData simple_pod_data;
+  simple_pod_data.value = 42;
+
+  /*---------------------------------------------------------------------------
+  Start a bunch of writer threads
+  ---------------------------------------------------------------------------*/
+  for( int i = 0; i < test_thread_count; ++i )
+  {
+    auto thread_func = std::bind( &TEST_GROUP_CppUTestGroupdb_mt::test_thread_multi_writer, this, &test_kvdb,
+                                  KEY_SIMPLE_POD_DATA, &simple_pod_data, sizeof( simple_pod_data ), test_thread_iterations );
+    test_threads.push_back( std::make_unique<std::thread>( thread_func ) );
+  }
+
+  /*---------------------------------------------------------------------------
+  Start a bunch of reader threads
+  ---------------------------------------------------------------------------*/
+  for( int i = 0; i < test_thread_count; ++i )
+  {
+    auto thread_func = std::bind( &TEST_GROUP_CppUTestGroupdb_mt::test_thread_multi_reader, this, &test_kvdb,
+                                  KEY_SIMPLE_POD_DATA, simple_pod_data.value, test_thread_iterations );
+    test_threads.push_back( std::make_unique<std::thread>( thread_func ) );
+  }
+
+  std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
+  test_thread_cv.notify_all();
 }

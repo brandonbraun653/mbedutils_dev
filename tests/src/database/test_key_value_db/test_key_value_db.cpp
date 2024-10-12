@@ -554,7 +554,7 @@ TEST( db_kv_ram, init )
 
   // KVDB was configured with some default data in the setup() method.
   CHECK( test_kvdb.init() );
-  CHECK( test_kvdb.init() ); // Coverage test
+  CHECK( test_kvdb.init() );    // Coverage test
 
   /*---------------------------------------------------------------------------
   Calling configure again should fail (coverage test)
@@ -731,8 +731,8 @@ TEST_GROUP( db_kv_nvm )
   NvmKVDB::Storage<20, 512>               test_storage;
   harness::system::atexit::CallbackCopier atexit_callback_copier;
 
-  static constexpr char *const test_dflt_dev_name   = "nor_flash_0";
-  static constexpr char *const test_dflt_partition  = "kv_db";
+  const std::string test_dflt_dev_name  = "nor_flash_0";
+  const std::string test_dflt_partition = "kv_db";
 
   void setup()
   {
@@ -754,14 +754,14 @@ TEST_GROUP( db_kv_nvm )
     flash_0_cfg.dev_attr.block_size = fdb_nor_flash0.blk_size;
     flash_0_cfg.dev_attr.size       = fdb_nor_flash0.len;
 
-    std::remove("flash_0_test.bin");
+    std::remove( "flash_0_test.bin" );
     s_flash_0_driver->open( "flash_0_test.bin", flash_0_cfg );
 
     mb::memory::nor::DeviceConfig flash_1_cfg;
     flash_1_cfg.dev_attr.block_size = fdb_nor_flash1.blk_size;
     flash_1_cfg.dev_attr.size       = fdb_nor_flash1.len;
 
-    std::remove("flash_1_test.bin");
+    std::remove( "flash_1_test.bin" );
     s_flash_1_driver->open( "flash_1_test.bin", flash_1_cfg );
 
     /*-------------------------------------------------------------------------
@@ -804,8 +804,8 @@ TEST_GROUP( db_kv_nvm )
     /*-------------------------------------------------------------------------
     Configure the NVM database
     -------------------------------------------------------------------------*/
-    test_config.dev_name  = test_dflt_dev_name;
-    test_config.part_name = test_dflt_partition;
+    test_config.dev_name  = test_dflt_dev_name.c_str();
+    test_config.part_name = test_dflt_partition.c_str();
     test_config.ram_kvdb  = &test_storage.kv_ram_db;
 
     CHECK( DB_ERR_NONE == test_kvdb.configure( test_config ) );
@@ -866,8 +866,8 @@ TEST( db_kv_nvm, init_unable_to_acquire_mutex_resources )
   /*-------------------------------------------------------------------------
   Configure the NVM database
   -------------------------------------------------------------------------*/
-  test_config.dev_name  = test_dflt_dev_name;
-  test_config.part_name = test_dflt_partition;
+  test_config.dev_name  = test_dflt_dev_name.c_str();
+  test_config.part_name = test_dflt_partition.c_str();
   test_config.ram_kvdb  = &ram_db;
 
   CHECK( DB_ERR_NONE == nvm_db.configure( test_config ) );
@@ -1301,7 +1301,7 @@ TEST( db_kv_nvm, rw_policy_missing )
   CHECK( test_kvdb.exists( KEY_VARIABLE_SIZED_POD_DATA ) );
 
   // Remove the flags on the node
-  auto *node = test_kvdb.find( KEY_VARIABLE_SIZED_POD_DATA );
+  auto *node  = test_kvdb.find( KEY_VARIABLE_SIZED_POD_DATA );
   node->flags = KV_FLAG_PERSISTENT;
   CHECK( test_kvdb.exists( KEY_VARIABLE_SIZED_POD_DATA ) );
 
@@ -1318,21 +1318,105 @@ TEST( db_kv_nvm, rw_policy_missing )
   CHECK( -1 == test_kvdb.read( KEY_VARIABLE_SIZED_POD_DATA, &read_data, sizeof( read_data ) ) );
 }
 
+TEST( db_kv_nvm, encode_decode_data )
+{
+  /*---------------------------------------------------------------------------
+  Write some data
+  ---------------------------------------------------------------------------*/
+  SimplePODData data_to_write;
+  data_to_write.value = 0x55;
+
+  CHECK( sizeof( data_to_write ) == test_kvdb.write( KEY_SIMPLE_POD_DATA, &data_to_write, sizeof( data_to_write ) ) );
+
+  /*---------------------------------------------------------------------------
+  Encode the data
+  ---------------------------------------------------------------------------*/
+  uint8_t encoded_data[ 64 ];
+  int     encoded_size = test_kvdb.encode( KEY_SIMPLE_POD_DATA, encoded_data, sizeof( encoded_data ) );
+
+  CHECK( encoded_size > 0 );
+
+  /*---------------------------------------------------------------------------
+  Write new data to ensure the decode process is working
+  ---------------------------------------------------------------------------*/
+  data_to_write.value = 0xAA;
+  CHECK( sizeof( data_to_write ) == test_kvdb.write( KEY_SIMPLE_POD_DATA, &data_to_write, sizeof( data_to_write ) ) );
+
+  /*---------------------------------------------------------------------------
+  Decode the data
+  ---------------------------------------------------------------------------*/
+  SimplePODData data_to_read;
+  int           decoded_size = test_kvdb.decode( KEY_SIMPLE_POD_DATA, encoded_data, encoded_size );
+
+  CHECK( decoded_size > 0 );
+
+  /*-----------------------------------------------------------------------------
+  Read the data back out
+  -----------------------------------------------------------------------------*/
+  CHECK( test_kvdb.read( KEY_SIMPLE_POD_DATA, &data_to_read, sizeof( data_to_read ) ) );
+  CHECK( 0x55 == data_to_read.value );
+}
+
+TEST( db_kv_nvm, sync )
+{
+  /*---------------------------------------------------------------------------
+  Construct a new node with a complex caching policy:
+    - Immediate write to NVM
+    - Read only from the cache
+  ---------------------------------------------------------------------------*/
+  KVNode new_node;
+  new_node.hashKey   = KEY_VARIABLE_SIZED_POD_DATA;
+  new_node.writer    = KVWriter_Memcpy;
+  new_node.reader    = KVReader_Memcpy;
+  new_node.datacache = &s_kv_cache_backing.variable_pod_data;
+  new_node.pbFields  = VariableSizedPODData_fields;
+  new_node.dataSize  = VariableSizedPODData_size;
+  new_node.flags     = KV_FLAG_PERSISTENT | KV_FLAG_CACHE_POLICY_WRITE_THROUGH | KV_FLAG_CACHE_POLICY_READ_CACHE;
+
+  CHECK( test_kvdb.insert( new_node ) );
+  CHECK( test_kvdb.exists( KEY_VARIABLE_SIZED_POD_DATA ) );
+
+  /*---------------------------------------------------------------------------
+  Write some data to NVM
+  ---------------------------------------------------------------------------*/
+  VariableSizedPODData write_data;
+  memset( &write_data, 0, sizeof( write_data ) );
+
+  write_data.value           = rand() % 0xFF;
+  write_data.data.size       = 3;
+  write_data.data.bytes[ 0 ] = rand() % 0xFF;
+  write_data.data.bytes[ 1 ] = rand() % 0xFF;
+  write_data.data.bytes[ 2 ] = rand() % 0xFF;
+
+  CHECK( sizeof( write_data ) == test_kvdb.write( KEY_VARIABLE_SIZED_POD_DATA, &write_data, sizeof( write_data ) ) );
+
+  /*---------------------------------------------------------------------------
+  Modify the cache to ensure it's out of sync with NVM
+  ---------------------------------------------------------------------------*/
+  auto *node = test_kvdb.find( KEY_VARIABLE_SIZED_POD_DATA );
+  memset( node->datacache, 0, node->dataSize );
+  CHECK( 0 != memcmp( node->datacache, &write_data, node->dataSize ) );
+
+  /*---------------------------------------------------------------------------
+  Sync the cache with NVM
+  ---------------------------------------------------------------------------*/
+  test_kvdb.sync();
+
+  /*---------------------------------------------------------------------------
+  Validate the cache is now in sync with NVM
+  ---------------------------------------------------------------------------*/
+  VariableSizedPODData read_data;
+  memset( &read_data, 0, sizeof( read_data ) );
+
+  test_kvdb.read( KEY_VARIABLE_SIZED_POD_DATA, &read_data, sizeof( read_data ) );
+  CHECK( 0 == memcmp( &write_data, &read_data, sizeof( write_data ) ) );
+}
+
 /*-----------------------------------------------------------------------------
 Utility Functions
 -----------------------------------------------------------------------------*/
 
-TEST_GROUP( db_utility )
-{
-  void setup()
-  {
-  }
-
-  void teardown()
-  {
-  }
-};
-
+TEST_GROUP( db_utility ){};
 
 TEST( db_utility, flashdb_error_to_string )
 {
@@ -1365,17 +1449,3 @@ TEST( db_utility, hashing_utilities )
   CHECK( hash( &data, sizeof( data ) ) );
   CHECK( hash( &data, sizeof( data ) ) == hash( &data, sizeof( data ) ) );
 }
-
-
-TEST_GROUP( db_multithread )
-{
-  void setup()
-  {
-
-  }
-
-  void teardown()
-  {
-
-  }
-};
