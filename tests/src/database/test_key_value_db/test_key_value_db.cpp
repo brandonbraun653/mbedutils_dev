@@ -1121,7 +1121,7 @@ TEST( db_kv_nvm, rw_policy_1 )
 {
   /*---------------------------------------------------------------------------
   Construct a new node with a complex caching policy:
-    - Immediate write back to NVM
+    - Immediate write through to NVM
     - Read through to only pull data from NVM
   ---------------------------------------------------------------------------*/
   KVNode new_node;
@@ -1171,7 +1171,7 @@ TEST( db_kv_nvm, rw_policy_2 )
 {
   /*---------------------------------------------------------------------------
   Construct a new node with a complex caching policy:
-    - Immediate write back to NVM
+    - Immediate write through to NVM
     - Read only from cache
   ---------------------------------------------------------------------------*/
   KVNode new_node;
@@ -1273,6 +1273,242 @@ TEST( db_kv_nvm, rw_policy_3 )
 
   test_kvdb.read( KEY_VARIABLE_SIZED_POD_DATA, &read_data, sizeof( read_data ) );
   CHECK( 0 == memcmp( &write_data, &read_data, sizeof( write_data ) ) );
+}
+
+TEST( db_kv_nvm, rw_policy_4 )
+{
+  /*---------------------------------------------------------------------------
+  Construct a new node with a complex caching policy: CONFLICTING
+    - Immediate write through to NVM
+    - Read from cache AND NVM
+  ---------------------------------------------------------------------------*/
+  KVNode new_node;
+  new_node.hashKey   = KEY_VARIABLE_SIZED_POD_DATA;
+  new_node.writer    = KVWriter_Memcpy;
+  new_node.reader    = KVReader_Memcpy;
+  new_node.datacache = &s_kv_cache_backing.variable_pod_data;
+  new_node.pbFields  = VariableSizedPODData_fields;
+  new_node.dataSize  = VariableSizedPODData_size;
+  new_node.flags     = KV_FLAG_PERSISTENT | KV_FLAG_CACHE_POLICY_WRITE_THROUGH | KV_FLAG_CACHE_POLICY_READ_CACHE | KV_FLAG_CACHE_POLICY_READ_THROUGH;
+
+  CHECK( test_kvdb.insert( new_node ) );
+  CHECK( test_kvdb.exists( KEY_VARIABLE_SIZED_POD_DATA ) );
+
+  /*---------------------------------------------------------------------------
+  Write some data
+  ---------------------------------------------------------------------------*/
+  VariableSizedPODData write_data;
+  memset( &write_data, 0, sizeof( write_data ) );
+
+  write_data.value           = rand() % 0xFF;
+  write_data.data.size       = 3;
+  write_data.data.bytes[ 0 ] = rand() % 0xFF;
+  write_data.data.bytes[ 1 ] = rand() % 0xFF;
+  write_data.data.bytes[ 2 ] = rand() % 0xFF;
+
+  CHECK( 0 != memcmp( &s_kv_cache_backing.variable_pod_data, &write_data, sizeof( write_data ) ) );
+  CHECK( sizeof( write_data ) == test_kvdb.write( KEY_VARIABLE_SIZED_POD_DATA, &write_data, sizeof( write_data ) ) );
+
+  /*---------------------------------------------------------------------------
+  Perform the read. Should fail as the policy is conflicting.
+  ---------------------------------------------------------------------------*/
+  VariableSizedPODData read_data;
+  memset( &read_data, 0, sizeof( read_data ) );
+
+  CHECK( -1 == test_kvdb.read( KEY_VARIABLE_SIZED_POD_DATA, &read_data, sizeof( read_data ) ) );
+  CHECK( 0 != memcmp( &write_data, &read_data, sizeof( write_data ) ) );
+}
+
+TEST( db_kv_nvm, rw_policy_5 )
+{
+  /*---------------------------------------------------------------------------
+  Construct a new node with a complex caching policy: MISSING
+    - Immediate write through to NVM
+    - Oops, forgot to set a read policy
+  ---------------------------------------------------------------------------*/
+  KVNode new_node;
+  new_node.hashKey   = KEY_VARIABLE_SIZED_POD_DATA;
+  new_node.writer    = KVWriter_Memcpy;
+  new_node.reader    = KVReader_Memcpy;
+  new_node.datacache = &s_kv_cache_backing.variable_pod_data;
+  new_node.pbFields  = VariableSizedPODData_fields;
+  new_node.dataSize  = VariableSizedPODData_size;
+  new_node.flags     = KV_FLAG_PERSISTENT | KV_FLAG_CACHE_POLICY_WRITE_THROUGH;
+
+  CHECK( test_kvdb.insert( new_node ) );
+  CHECK( test_kvdb.exists( KEY_VARIABLE_SIZED_POD_DATA ) );
+
+  /*---------------------------------------------------------------------------
+  Write some data
+  ---------------------------------------------------------------------------*/
+  VariableSizedPODData write_data;
+  memset( &write_data, 0, sizeof( write_data ) );
+
+  write_data.value           = rand() % 0xFF;
+  write_data.data.size       = 3;
+  write_data.data.bytes[ 0 ] = rand() % 0xFF;
+  write_data.data.bytes[ 1 ] = rand() % 0xFF;
+  write_data.data.bytes[ 2 ] = rand() % 0xFF;
+
+  CHECK( 0 != memcmp( &s_kv_cache_backing.variable_pod_data, &write_data, sizeof( write_data ) ) );
+  CHECK( sizeof( write_data ) == test_kvdb.write( KEY_VARIABLE_SIZED_POD_DATA, &write_data, sizeof( write_data ) ) );
+
+  /*---------------------------------------------------------------------------
+  Perform the read. Should fail as the policy is missing.
+  ---------------------------------------------------------------------------*/
+  VariableSizedPODData read_data;
+  memset( &read_data, 0, sizeof( read_data ) );
+
+  CHECK( -1 == test_kvdb.read( KEY_VARIABLE_SIZED_POD_DATA, &read_data, sizeof( read_data ) ) );
+  CHECK( 0 != memcmp( &write_data, &read_data, sizeof( write_data ) ) );
+}
+
+TEST( db_kv_nvm, rw_policy_6 )
+{
+  /*---------------------------------------------------------------------------
+  Construct a new node with a complex caching policy: SANITIZE ON WRITE
+    - Write back | sanitize
+    - Read cache
+  ---------------------------------------------------------------------------*/
+  KVNode new_node;
+  new_node.hashKey   = KEY_VARIABLE_SIZED_POD_DATA;
+  new_node.writer    = KVWriter_Memcpy;
+  new_node.reader    = KVReader_Memcpy;
+  new_node.sanitizer = KVSanitizer_VariableSizedPODData;
+  new_node.datacache = &s_kv_cache_backing.variable_pod_data;
+  new_node.pbFields  = VariableSizedPODData_fields;
+  new_node.dataSize  = VariableSizedPODData_size;
+  new_node.flags     = KV_FLAG_PERSISTENT | KV_FLAG_CACHE_POLICY_WRITE_BACK | KV_FLAG_CACHE_POLICY_READ_CACHE | KV_FLAG_SANITIZE_ON_WRITE;
+
+  CHECK( test_kvdb.insert( new_node ) );
+  CHECK( test_kvdb.exists( KEY_VARIABLE_SIZED_POD_DATA ) );
+
+  /*---------------------------------------------------------------------------
+  Write some data. Sanitizer will overwrite this to zero.
+  ---------------------------------------------------------------------------*/
+  VariableSizedPODData write_data;
+  memset( &write_data, 0, sizeof( write_data ) );
+
+  write_data.value           = rand() % 0xFF;
+  write_data.data.size       = 3;
+  write_data.data.bytes[ 0 ] = rand() % 0xFF;
+  write_data.data.bytes[ 1 ] = rand() % 0xFF;
+  write_data.data.bytes[ 2 ] = rand() % 0xFF;
+
+  /* write_data gets sanitized, so we need to copy original state for comparing */
+  VariableSizedPODData write_data_copy = write_data;
+
+  test_kvdb.write( KEY_VARIABLE_SIZED_POD_DATA, &write_data, sizeof( write_data ) );
+
+  /*---------------------------------------------------------------------------
+  Perform the read
+  ---------------------------------------------------------------------------*/
+  VariableSizedPODData read_data;
+
+  CHECK( test_kvdb.read( KEY_VARIABLE_SIZED_POD_DATA, &read_data, sizeof( read_data ) ) );
+  CHECK( 0 != memcmp( &write_data_copy, &read_data, sizeof( write_data ) ) );
+}
+
+TEST( db_kv_nvm, rw_policy_7 )
+{
+  /*---------------------------------------------------------------------------
+  Construct a new node with a complex caching policy: SANITIZE ON READ
+    - Write back
+    - Read cache | sanitize
+  ---------------------------------------------------------------------------*/
+  KVNode new_node;
+  new_node.hashKey   = KEY_VARIABLE_SIZED_POD_DATA;
+  new_node.writer    = KVWriter_Memcpy;
+  new_node.reader    = KVReader_Memcpy;
+  new_node.sanitizer = KVSanitizer_VariableSizedPODData;
+  new_node.datacache = &s_kv_cache_backing.variable_pod_data;
+  new_node.pbFields  = VariableSizedPODData_fields;
+  new_node.dataSize  = VariableSizedPODData_size;
+  new_node.flags     = KV_FLAG_PERSISTENT | KV_FLAG_CACHE_POLICY_WRITE_BACK | KV_FLAG_CACHE_POLICY_READ_CACHE | KV_FLAG_SANITIZE_ON_READ;
+
+  CHECK( test_kvdb.insert( new_node ) );
+  CHECK( test_kvdb.exists( KEY_VARIABLE_SIZED_POD_DATA ) );
+
+  /*---------------------------------------------------------------------------
+  Write some data
+  ---------------------------------------------------------------------------*/
+  VariableSizedPODData write_data;
+  memset( &write_data, 0, sizeof( write_data ) );
+
+  write_data.value           = rand() % 0xFF;
+  write_data.data.size       = 3;
+  write_data.data.bytes[ 0 ] = rand() % 0xFF;
+  write_data.data.bytes[ 1 ] = rand() % 0xFF;
+  write_data.data.bytes[ 2 ] = rand() % 0xFF;
+
+  VariableSizedPODData write_data_copy = write_data;
+
+  test_kvdb.write( KEY_VARIABLE_SIZED_POD_DATA, &write_data, sizeof( write_data ) );
+
+  /* Ensure no on-write sanitization happened */
+  CHECK( 0 == memcmp( &write_data, &write_data_copy, sizeof( write_data ) ) );
+
+  /*---------------------------------------------------------------------------
+  Perform the read
+  ---------------------------------------------------------------------------*/
+  VariableSizedPODData read_data;
+  VariableSizedPODData exp_read_data;
+  memcpy( &read_data, &write_data, sizeof( write_data ) );
+  memset( &exp_read_data, 0, sizeof( exp_read_data ) );
+
+  test_kvdb.read( KEY_VARIABLE_SIZED_POD_DATA, &read_data, sizeof( read_data ) );
+  CHECK( 0 == memcmp( &read_data, &exp_read_data, sizeof( write_data ) ) );
+}
+
+TEST( db_kv_nvm, rw_policy_8 )
+{
+  /*---------------------------------------------------------------------------
+  Construct a new node with a complex caching policy: SANITIZE ON READ
+    - Write through
+    - Read through | sanitize
+  ---------------------------------------------------------------------------*/
+  KVNode new_node;
+  new_node.hashKey   = KEY_VARIABLE_SIZED_POD_DATA;
+  new_node.writer    = KVWriter_Memcpy;
+  new_node.reader    = KVReader_Memcpy;
+  new_node.sanitizer = KVSanitizer_VariableSizedPODData;
+  new_node.datacache = &s_kv_cache_backing.variable_pod_data;
+  new_node.pbFields  = VariableSizedPODData_fields;
+  new_node.dataSize  = VariableSizedPODData_size;
+  new_node.flags     = KV_FLAG_PERSISTENT | KV_FLAG_CACHE_POLICY_WRITE_THROUGH | KV_FLAG_CACHE_POLICY_READ_THROUGH | KV_FLAG_SANITIZE_ON_READ;
+
+  CHECK( test_kvdb.insert( new_node ) );
+  CHECK( test_kvdb.exists( KEY_VARIABLE_SIZED_POD_DATA ) );
+
+  /*---------------------------------------------------------------------------
+  Write some data
+  ---------------------------------------------------------------------------*/
+  VariableSizedPODData write_data;
+  memset( &write_data, 0, sizeof( write_data ) );
+
+  write_data.value           = rand() % 0xFF;
+  write_data.data.size       = 3;
+  write_data.data.bytes[ 0 ] = rand() % 0xFF;
+  write_data.data.bytes[ 1 ] = rand() % 0xFF;
+  write_data.data.bytes[ 2 ] = rand() % 0xFF;
+
+  VariableSizedPODData write_data_copy = write_data;
+
+  test_kvdb.write( KEY_VARIABLE_SIZED_POD_DATA, &write_data, sizeof( write_data ) );
+
+  /* Ensure no on-write sanitization happened */
+  CHECK( 0 == memcmp( &write_data, &write_data_copy, sizeof( write_data ) ) );
+
+  /*---------------------------------------------------------------------------
+  Perform the read
+  ---------------------------------------------------------------------------*/
+  VariableSizedPODData read_data;
+  VariableSizedPODData exp_read_data;
+  memcpy( &read_data, &write_data, sizeof( write_data ) );
+  memset( &exp_read_data, 0, sizeof( exp_read_data ) );
+
+  test_kvdb.read( KEY_VARIABLE_SIZED_POD_DATA, &read_data, sizeof( read_data ) );
+  CHECK( 0 == memcmp( &read_data, &exp_read_data, sizeof( write_data ) ) );
 }
 
 TEST( db_kv_nvm, rw_policy_missing )

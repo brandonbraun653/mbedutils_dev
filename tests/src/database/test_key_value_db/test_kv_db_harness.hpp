@@ -139,6 +139,24 @@ struct KVRAMData
 };
 
 /*-----------------------------------------------------------------------------
+Public Functions
+-----------------------------------------------------------------------------*/
+
+/**
+ * @brief Sanitize callback for VariableSizedPODData to set all values to zero
+ */
+static void sanitize_callback_VariableSizedPODData( KVNode &node, void *data, const size_t size )
+{
+  VariableSizedPODData *view = reinterpret_cast<VariableSizedPODData *>( data );
+
+  view->value     = 0;
+  view->data.size = 0;
+  memset( view->data.bytes, 0, sizeof( view->data.bytes ) );
+}
+
+static constexpr auto KVSanitizer_VariableSizedPODData = SanitizeFunc::create<sanitize_callback_VariableSizedPODData>();
+
+/*-----------------------------------------------------------------------------
 Classes
 -----------------------------------------------------------------------------*/
 
@@ -183,13 +201,13 @@ public:
 private:
   etl::array<uint8_t, 512> _txcode_storage;
 
-  bool _cb_validate( const KVNode &node )
+  bool _cb_validate( const KVNode &node, void *data, const size_t size )
   {
     validate_callback_calls++;
     return true;
   }
 
-  void _cb_sanitize( KVNode &node )
+  void _cb_sanitize( KVNode &node, void *data, const size_t size )
   {
     sanitize_callback_calls++;
   }

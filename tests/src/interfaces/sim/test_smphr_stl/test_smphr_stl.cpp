@@ -63,10 +63,19 @@ TEST( SemaphoreTests, TestAcquireAndReleaseSemaphore )
 {
   mb::osal::mb_smphr_t semaphore;
   mb::osal::createSmphr( semaphore, 10, 1 );
+
+  /* Standard context */
   mb::osal::acquireSmphr( semaphore );
   CHECK_EQUAL( 0, mb::osal::getSmphrAvailable( semaphore ) );
   mb::osal::releaseSmphr( semaphore );
   CHECK_EQUAL( 1, mb::osal::getSmphrAvailable( semaphore ) );
+
+  /* FromISR context */
+  mb::osal::acquireSmphr( semaphore );
+  CHECK_EQUAL( 0, mb::osal::getSmphrAvailable( semaphore ) );
+  mb::osal::releaseSmphrFromISR( semaphore );
+  CHECK_EQUAL( 1, mb::osal::getSmphrAvailable( semaphore ) );
+
   mb::osal::destroySmphr( semaphore );
 }
 
