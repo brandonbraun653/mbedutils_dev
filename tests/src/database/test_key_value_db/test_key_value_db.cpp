@@ -1113,7 +1113,6 @@ TEST( db_kv_nvm, rw_policy_0 )
   Perform the read again, which should now reflect the new state
   ---------------------------------------------------------------------------*/
   memset( &read_data, 0, sizeof( read_data ) );
-
   test_kvdb.read( KEY_VARIABLE_SIZED_POD_DATA, &read_data, sizeof( read_data ) );
   CHECK( 0 == memcmp( &write_data, &read_data, sizeof( write_data ) ) );
 }
