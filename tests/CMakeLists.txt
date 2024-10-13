@@ -33,6 +33,7 @@ target_include_directories(mbedutils_headers
 
 add_subdirectory(src/interfaces/sim/test_mutex_stl)
 add_subdirectory(src/interfaces/sim/test_smphr_stl)
+add_subdirectory(src/interfaces/sim/test_thread_stl)
 add_subdirectory(src/database/test_key_value_db)
 add_subdirectory(src/database/test_key_value_db_mt)
 add_subdirectory(src/memory/nvm/test_nor_adesto)
@@ -42,6 +43,7 @@ add_custom_target(BuildAllTests)
 add_dependencies(BuildAllTests
   TestIntfMutexStl
   TestIntfSmphrStl
+  TestIntfThreadStl
   TestKeyValueDatabase
   TestKeyValueDatabaseMT
   TestNorAdesto
