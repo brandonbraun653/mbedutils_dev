@@ -1,5 +1,3 @@
-include(test_target.cmake)
-
 project(mbedutils_test)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -17,10 +15,10 @@ set(TESTING_INCLUDE_DIRECTORIES
     ${PROJECT_SOURCE_DIR}/../mbedutils/src/rpc/proto
     ${PROJECT_SOURCE_DIR}/../lib/cpputest/include
     ${PROJECT_SOURCE_DIR}/../lib/etl/include
-    ${PROJECT_SOURCE_DIR}/expect
-    ${PROJECT_SOURCE_DIR}/fake
-    ${PROJECT_SOURCE_DIR}/harness
-    ${PROJECT_SOURCE_DIR}/mock
+    ${MBEDUTILS_TEST_EXPECT_DIR}
+    ${MBEDUTILS_TEST_FAKE_DIR}
+    ${MBEDUTILS_TEST_HARNESS_DIR}
+    ${MBEDUTILS_TEST_MOCK_DIR}
 )
 
 # Modify the mbedutils headers to target to include the etl library. It's not packaged

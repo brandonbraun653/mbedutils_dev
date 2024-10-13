@@ -1,4 +1,4 @@
-include(${PROJECT_SOURCE_DIR}/test_target.cmake)
+include(${MBEDUTILS_TEST_DIR}/test_target.cmake)
 create_test_target(
     TARGET
         TestNorAdesto
@@ -7,12 +7,12 @@ create_test_target(
     INSTRUMENTED_SOURCES
         ${PROJECT_SOURCE_DIR}/../mbedutils/src/memory/nvm/nor_adesto.cpp
     DEPENDENT_SOURCES
-        ${PROJECT_SOURCE_DIR}/expect/gpio_intf_expect.cpp
-        ${PROJECT_SOURCE_DIR}/expect/spi_intf_expect.cpp
-        ${PROJECT_SOURCE_DIR}/expect/time_intf_expect.cpp
-        ${PROJECT_SOURCE_DIR}/mock/gpio_intf_mock.cpp
-        ${PROJECT_SOURCE_DIR}/mock/spi_intf_mock.cpp
-        ${PROJECT_SOURCE_DIR}/mock/time_intf_mock.cpp
+        ${MBEDUTILS_TEST_EXPECT_DIR}/gpio_intf_expect.cpp
+        ${MBEDUTILS_TEST_EXPECT_DIR}/spi_intf_expect.cpp
+        ${MBEDUTILS_TEST_EXPECT_DIR}/time_intf_expect.cpp
+        ${MBEDUTILS_TEST_MOCK_DIR}/gpio_intf_mock.cpp
+        ${MBEDUTILS_TEST_MOCK_DIR}/spi_intf_mock.cpp
+        ${MBEDUTILS_TEST_MOCK_DIR}/time_intf_mock.cpp
     INCLUDE_DIRS
         ${TESTING_INCLUDE_DIRECTORIES}
     LIBRARIES

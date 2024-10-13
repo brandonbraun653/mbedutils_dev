@@ -19,3 +19,6 @@
 [submodule "lib/cppumockgen"]
 	path = lib/cppumockgen
 	url = https://github.com/jgonzalezdr/CppUMockGen.git
+[submodule "lib/mbedutils_test"]
+	path = lib/mbedutils_test
+	url = https://github.com/brandonbraun653/mbedutils_test.git

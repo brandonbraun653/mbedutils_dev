@@ -12,6 +12,7 @@ add_subdirectory(lib/etl)
 add_subdirectory(lib/mbedutils_freertos)
 add_subdirectory(lib/mbedutils_pico)
 add_subdirectory(lib/mbedutils_sim)
+add_subdirectory(lib/mbedutils_test)
 add_subdirectory(mbedutils)
 add_subdirectory(tests)
 

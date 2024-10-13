@@ -44,8 +44,8 @@ echo "Using INCLUDE_DIRS: ${INCLUDE_DIRS}"
 
 # Get a list of all header files in the $MBEDUTILS_ROOT/include directory and its subdirectories
 # and generate mocks for each of them.
-MOCK_DIR=$PROJECT_ROOT/tests/mock
-EXPECT_DIR=$PROJECT_ROOT/tests/expect
+MOCK_DIR=$PROJECT_ROOT/lib/mbedutils_test/mock
+EXPECT_DIR=$PROJECT_ROOT/lib/mbedutils_test/expect
 
 mkdir -p $MOCK_DIR
 mkdir -p $EXPECT_DIR

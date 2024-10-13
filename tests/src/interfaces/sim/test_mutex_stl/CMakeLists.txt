@@ -1,4 +1,4 @@
-include(${PROJECT_SOURCE_DIR}/test_target.cmake)
+include(${MBEDUTILS_TEST_DIR}/test_target.cmake)
 create_test_target(
     TARGET
         TestIntfMutexStl

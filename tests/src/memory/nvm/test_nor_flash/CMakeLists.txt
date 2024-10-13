@@ -1,4 +1,4 @@
-include(${PROJECT_SOURCE_DIR}/test_target.cmake)
+include(${MBEDUTILS_TEST_DIR}/test_target.cmake)
 create_test_target(
     TARGET
         TestNorFlash
@@ -7,18 +7,18 @@ create_test_target(
     INSTRUMENTED_SOURCES
         ${PROJECT_SOURCE_DIR}/../mbedutils/src/memory/nvm/nor_flash.cpp
     DEPENDENT_SOURCES
-        ${PROJECT_SOURCE_DIR}/expect/assert_expect.cpp
-        ${PROJECT_SOURCE_DIR}/expect/gpio_intf_expect.cpp
-        ${PROJECT_SOURCE_DIR}/expect/nor_flash_device_expect.cpp
-        ${PROJECT_SOURCE_DIR}/expect/spi_intf_expect.cpp
-        ${PROJECT_SOURCE_DIR}/expect/time_intf_expect.cpp
-        ${PROJECT_SOURCE_DIR}/expect/mutex_intf_expect.cpp
-        ${PROJECT_SOURCE_DIR}/mock/assert_mock.cpp
-        ${PROJECT_SOURCE_DIR}/mock/gpio_intf_mock.cpp
-        ${PROJECT_SOURCE_DIR}/mock/mutex_intf_mock.cpp
-        ${PROJECT_SOURCE_DIR}/mock/nor_flash_device_mock.cpp
-        ${PROJECT_SOURCE_DIR}/mock/spi_intf_mock.cpp
-        ${PROJECT_SOURCE_DIR}/mock/time_intf_mock.cpp
+        ${MBEDUTILS_TEST_EXPECT_DIR}/assert_expect.cpp
+        ${MBEDUTILS_TEST_EXPECT_DIR}/gpio_intf_expect.cpp
+        ${MBEDUTILS_TEST_EXPECT_DIR}/nor_flash_device_expect.cpp
+        ${MBEDUTILS_TEST_EXPECT_DIR}/spi_intf_expect.cpp
+        ${MBEDUTILS_TEST_EXPECT_DIR}/time_intf_expect.cpp
+        ${MBEDUTILS_TEST_EXPECT_DIR}/mutex_intf_expect.cpp
+        ${MBEDUTILS_TEST_MOCK_DIR}/assert_mock.cpp
+        ${MBEDUTILS_TEST_MOCK_DIR}/gpio_intf_mock.cpp
+        ${MBEDUTILS_TEST_MOCK_DIR}/mutex_intf_mock.cpp
+        ${MBEDUTILS_TEST_MOCK_DIR}/nor_flash_device_mock.cpp
+        ${MBEDUTILS_TEST_MOCK_DIR}/spi_intf_mock.cpp
+        ${MBEDUTILS_TEST_MOCK_DIR}/time_intf_mock.cpp
     INCLUDE_DIRS
         ${TESTING_INCLUDE_DIRECTORIES}
     LIBRARIES
