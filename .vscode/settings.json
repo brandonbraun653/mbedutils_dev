@@ -77,5 +77,11 @@
         "cinttypes": "cpp",
         "typeinfo": "cpp",
         "variant": "cpp"
-    }
+    },
+    "C_Cpp.intelliSenseEngine": "disabled",
+    "clangd.path": "clangd",
+    "clangd.arguments": ["-log=verbose",
+                         "-pretty",
+                         "--background-index",
+                         "--compile-commands-dir=${workspaceFolder}/build/host/debug"],
 }

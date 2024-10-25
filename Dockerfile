@@ -20,6 +20,7 @@ RUN sudo apt-get update && \
     aspnetcore-runtime-8.0 \
     build-essential \
     clang \
+    clangd \
     clang-format \
     cmake \
     cpputest \

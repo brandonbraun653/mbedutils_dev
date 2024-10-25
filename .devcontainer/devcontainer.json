@@ -37,6 +37,7 @@
         "hbenl.vscode-test-explorer",
         "johnpapa.vscode-peacock",
         "josetr.cmake-language-support-vscode",
+        "llvm-vs-code-extensions.vscode-clangd",
         "marus25.cortex-debug",
         "marus25.cortex-debug-dp-stm32f4",
         "marus25.cortex-debug-dp-stm32l4",
