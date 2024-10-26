@@ -35,7 +35,7 @@ target_include_directories(mbedutils_headers
 )
 
 add_subdirectory(src/threading/test_message)
-add_subdirectory(src/threading/test_thread_stl)
+add_subdirectory(src/threading/test_thread)
 add_subdirectory(src/database/test_key_value_db)
 add_subdirectory(src/database/test_key_value_db_mt)
 add_subdirectory(src/interfaces/sim/test_mutex_stl)
@@ -47,7 +47,7 @@ add_subdirectory(src/memory/nvm/test_nor_flash)
 add_custom_target(BuildAllTests)
 add_dependencies(BuildAllTests
   TestThreadingMessage
-  TestThreadingThreadSTL
+  TestThreadingThread
   TestIntfMutexStl
   TestIntfSmphrStl
   TestIntfThreadStl

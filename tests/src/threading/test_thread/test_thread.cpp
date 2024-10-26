@@ -1,6 +1,6 @@
 /******************************************************************************
  *  File Name:
- *    test_thread_stl.cpp
+ *    test_thread.cpp
  *
  *  Description:
  *    Higher level tests for the thread module using the STL interfaces.
