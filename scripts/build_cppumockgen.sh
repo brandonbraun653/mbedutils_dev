@@ -24,8 +24,3 @@ echo "Using LIBCLANG_HOME: $LIBCLANG_HOME"
 cd $CPPUMOCKGEN_BUILD_DIR
 cmake ..
 make -j8
-
-# Copy the CppUMockGen.hpp
-OUTPUT_HDR=$(readlink -f "$THIS_DIR/../tests/mock")/CppUMockGen.hpp
-echo "Copying CppUMockGen.hpp to $OUTPUT_HDR"
-cp $CPPUMOCKGEN_ROOT/app/include/CppUMockGen.hpp $OUTPUT_HDR

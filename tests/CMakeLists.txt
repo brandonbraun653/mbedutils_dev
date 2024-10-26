@@ -9,16 +9,22 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/../lib/cpputest ${CMAKE_CURRENT_BINARY_DI
 
 # Include Dependent Headers
 set(TESTING_INCLUDE_DIRECTORIES
-    ${PROJECT_SOURCE_DIR}/../mbedutils/include
-    ${PROJECT_SOURCE_DIR}/../mbedutils/lib/cobs
-    ${PROJECT_SOURCE_DIR}/../mbedutils/lib/nanopb
-    ${PROJECT_SOURCE_DIR}/../mbedutils/src/rpc/proto
-    ${PROJECT_SOURCE_DIR}/../lib/cpputest/include
-    ${PROJECT_SOURCE_DIR}/../lib/etl/include
-    ${MBEDUTILS_TEST_EXPECT_DIR}
-    ${MBEDUTILS_TEST_FAKE_DIR}
-    ${MBEDUTILS_TEST_HARNESS_DIR}
-    ${MBEDUTILS_TEST_MOCK_DIR}
+  ${PROJECT_SOURCE_DIR}/../mbedutils/include
+  ${PROJECT_SOURCE_DIR}/../mbedutils/lib/cobs
+  ${PROJECT_SOURCE_DIR}/../mbedutils/lib/nanopb
+  ${PROJECT_SOURCE_DIR}/../mbedutils/lib/nanoprintf
+  ${PROJECT_SOURCE_DIR}/../mbedutils/src/rpc/proto
+  ${PROJECT_SOURCE_DIR}/../lib/cpputest/include
+  ${PROJECT_SOURCE_DIR}/../lib/etl/include
+  ${MBEDUTILS_TEST_EXPECT_DIR}
+  ${MBEDUTILS_TEST_FAKE_DIR}
+  ${MBEDUTILS_TEST_HARNESS_DIR}
+  ${MBEDUTILS_TEST_MOCK_DIR}
+)
+
+# Common Sources for Testing
+set(TESTING_COMMON_SOURCES
+  ${PROJECT_SOURCE_DIR}/../mbedutils/src/core/nanoprintf.cpp
 )
 
 # Modify the mbedutils headers to target to include the etl library. It's not packaged
@@ -27,7 +33,6 @@ target_include_directories(mbedutils_headers
     INTERFACE
     ${PROJECT_SOURCE_DIR}/../lib/etl/include
 )
-
 
 add_subdirectory(src/interfaces/sim/test_mutex_stl)
 add_subdirectory(src/interfaces/sim/test_smphr_stl)

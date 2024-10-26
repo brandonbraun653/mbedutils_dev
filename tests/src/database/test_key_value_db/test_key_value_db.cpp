@@ -13,7 +13,6 @@ Includes
 -----------------------------------------------------------------------------*/
 #include <cstdint>
 #include <cstddef>
-#include <array>
 #include <etl/array.h>
 #include <etl/span.h>
 #include <etl/vector.h>
@@ -28,6 +27,7 @@ Includes
 #include "assert_expect.hpp"
 #include "atexit_expect.hpp"
 #include "atexit_harness.hpp"
+#include "mbedutils/drivers/database/db_kv_util.hpp"
 #include "mutex_intf_expect.hpp"
 #include "nor_flash_expect.hpp"
 #include "nor_flash_file.hpp"
@@ -423,46 +423,47 @@ RAM Key-Value Database Tests
 
 TEST_GROUP( db_kv_ram )
 {
-  RamKVDB                   test_kvdb;
-  RamKVDB::Config           test_config;
-  RamKVDB::Storage<20, 512> test_storage;
+  RamKVDB          test_kvdb;
+  RamKVDB::Config  test_config;
+  Storage<20, 512> test_storage;
 
   void setup()
   {
     /*-------------------------------------------------------------------------
     Configure a basic RAM database
     -------------------------------------------------------------------------*/
-    test_storage.nodes.clear();
-    test_storage.nodes.push_back( { .hashKey   = KEY_SIMPLE_POD_DATA,
-                                    .writer    = KVWriter_Memcpy,
-                                    .reader    = KVReader_Memcpy,
-                                    .datacache = &s_kv_cache_backing.simple_pod_data,
-                                    .pbFields  = SimplePODData_fields,
-                                    .dataSize  = SimplePODData_size,
-                                    .flags     = KV_FLAG_DEFAULT_VOLATILE } );
+    test_storage.node_dsc.clear();
+    test_storage.node_dsc.push_back( { .hashKey   = KEY_SIMPLE_POD_DATA,
+                                       .writer    = KVWriter_Memcpy,
+                                       .reader    = KVReader_Memcpy,
+                                       .datacache = &s_kv_cache_backing.simple_pod_data,
+                                       .pbFields  = SimplePODData_fields,
+                                       .dataSize  = SimplePODData_size,
+                                       .flags     = KV_FLAG_DEFAULT_VOLATILE } );
 
-    test_storage.nodes.push_back( { .hashKey   = KEY_KINDA_COMPLEX_POD_DATA,
-                                    .writer    = KVWriter_Memcpy,
-                                    .reader    = KVReader_Memcpy,
-                                    .datacache = &s_kv_cache_backing.kinda_complex_pod_data,
-                                    .pbFields  = KindaComplexPODData_fields,
-                                    .dataSize  = KindaComplexPODData_size,
-                                    .flags     = KV_FLAG_DEFAULT_VOLATILE } );
+    test_storage.node_dsc.push_back( { .hashKey   = KEY_KINDA_COMPLEX_POD_DATA,
+                                       .writer    = KVWriter_Memcpy,
+                                       .reader    = KVReader_Memcpy,
+                                       .datacache = &s_kv_cache_backing.kinda_complex_pod_data,
+                                       .pbFields  = KindaComplexPODData_fields,
+                                       .dataSize  = KindaComplexPODData_size,
+                                       .flags     = KV_FLAG_DEFAULT_VOLATILE } );
 
-    test_storage.nodes.push_back( { .hashKey   = KEY_ETL_STRING_DATA,
-                                    .writer    = KVWriter_EtlString,
-                                    .reader    = KVReader_EtlString,
-                                    .datacache = &s_kv_cache_backing.etl_string_data,
-                                    .pbFields  = StringData_fields,
-                                    .dataSize  = StringData_size,
-                                    .flags     = KV_FLAG_DEFAULT_VOLATILE } );
+    test_storage.node_dsc.push_back( { .hashKey   = KEY_ETL_STRING_DATA,
+                                       .writer    = KVWriter_EtlString,
+                                       .reader    = KVReader_EtlString,
+                                       .datacache = &s_kv_cache_backing.etl_string_data,
+                                       .pbFields  = StringData_fields,
+                                       .dataSize  = StringData_size,
+                                       .flags     = KV_FLAG_DEFAULT_VOLATILE } );
 
-    test_config.node_storage     = &test_storage.nodes;
-    test_config.transcode_buffer = test_storage.transcode_buffer;
+    test_config.ext_node_dsc         = &test_storage.node_dsc;
+    test_config.ext_transcode_buffer = test_storage.transcode_buffer;
 
     /*-------------------------------------------------------------------------
     Initialize the database
     -------------------------------------------------------------------------*/
+    expect::mb$::osal$::createRecursiveMutex( IgnoreParameter(), true );
     CHECK( DB_ERR_NONE == test_kvdb.configure( test_config ) );
 
     mock().clear();
@@ -493,12 +494,13 @@ TEST( db_kv_ram, configure_nominally )
   ---------------------------------------------------------------------------*/
   RamKVDB         kvdb;
   RamKVDB::Config config;
-  config.node_storage     = &test_storage.nodes;
-  config.transcode_buffer = { test_storage.transcode_buffer };
+  config.ext_node_dsc         = &test_storage.node_dsc;
+  config.ext_transcode_buffer = { test_storage.transcode_buffer };
 
   /*---------------------------------------------------------------------------
   Call FUT
   ---------------------------------------------------------------------------*/
+  expect::mb$::osal$::createRecursiveMutex( IgnoreParameter(), true );
   CHECK( DB_ERR_NONE == kvdb.configure( config ) );
 }
 
@@ -509,26 +511,26 @@ TEST( db_kv_ram, configure_bad_arguments )
   ---------------------------------------------------------------------------*/
   RamKVDB         kvdb;
   RamKVDB::Config config;
-  config.node_storage     = nullptr;
-  config.transcode_buffer = { test_storage.transcode_buffer };
+  config.ext_node_dsc         = nullptr;
+  config.ext_transcode_buffer = { test_storage.transcode_buffer };
 
   CHECK( DB_ERR_BAD_ARG == kvdb.configure( config ) );
 
   /*---------------------------------------------------------------------------
   Missing transcode buffer
   ---------------------------------------------------------------------------*/
-  config.node_storage     = &test_storage.nodes;
-  config.transcode_buffer = {};
+  config.ext_node_dsc         = &test_storage.node_dsc;
+  config.ext_transcode_buffer = {};
 
   CHECK( DB_ERR_BAD_ARG == kvdb.configure( config ) );
 
   /*---------------------------------------------------------------------------
   Bad KVNode in the storage
   ---------------------------------------------------------------------------*/
-  config.node_storage     = &test_storage.nodes;
-  config.transcode_buffer = { test_storage.transcode_buffer };
+  config.ext_node_dsc         = &test_storage.node_dsc;
+  config.ext_transcode_buffer = { test_storage.transcode_buffer };
 
-  test_storage.nodes.push_back( {} );
+  test_storage.node_dsc.push_back( {} );
   CHECK( DB_ERR_BAD_ARG == kvdb.configure( config ) );
 }
 
@@ -539,8 +541,8 @@ TEST( db_kv_ram, configure_transcode_buffer_too_small )
   ---------------------------------------------------------------------------*/
   RamKVDB         kvdb;
   RamKVDB::Config config;
-  config.node_storage     = &test_storage.nodes;
-  config.transcode_buffer = { test_storage.transcode_buffer.data(), 1 };
+  config.ext_node_dsc         = &test_storage.node_dsc;
+  config.ext_transcode_buffer = { test_storage.transcode_buffer.data(), 1 };
 
   /*---------------------------------------------------------------------------
   Call FUT
@@ -550,25 +552,10 @@ TEST( db_kv_ram, configure_transcode_buffer_too_small )
 
 TEST( db_kv_ram, init )
 {
-  expect::mb$::osal$::createRecursiveMutex( IgnoreParameter(), true );
-
-  // KVDB was configured with some default data in the setup() method.
-  CHECK( test_kvdb.init() );
-  CHECK( test_kvdb.init() );    // Coverage test
-
   /*---------------------------------------------------------------------------
-  Calling configure again should fail (coverage test)
+  Calling configure twice should fail
   ---------------------------------------------------------------------------*/
   CHECK( DB_ERR_NOT_AVAILABLE == test_kvdb.configure( test_config ) );
-}
-
-TEST( db_kv_ram, init_unable_to_acquire_mutex_resource )
-{
-  expect::mb$::osal$::createRecursiveMutex( IgnoreParameter(), false );
-  CHECK( false == test_kvdb.init() );
-
-  expect::mb$::osal$::createRecursiveMutex( IgnoreParameter(), true );
-  CHECK( test_kvdb.init() );
 }
 
 TEST( db_kv_ram, find_insert_exist_remove )
@@ -728,7 +715,7 @@ TEST_GROUP( db_kv_nvm )
 {
   NvmKVDB                                 test_kvdb;
   NvmKVDB::Config                         test_config;
-  NvmKVDB::Storage<20, 512>               test_storage;
+  Storage<20, 512>                        test_storage;
   harness::system::atexit::CallbackCopier atexit_callback_copier;
 
   const std::string test_dflt_dev_name  = "nor_flash_0";
@@ -767,8 +754,8 @@ TEST_GROUP( db_kv_nvm )
     /*-------------------------------------------------------------------------
     Inject some default KV test nodes
     -------------------------------------------------------------------------*/
-    test_storage.kv_nodes.clear();
-    test_storage.kv_nodes.push_back( { .hashKey   = KEY_SIMPLE_POD_DATA,
+    test_storage.node_dsc.clear();
+    test_storage.node_dsc.push_back( { .hashKey   = KEY_SIMPLE_POD_DATA,
                                        .writer    = KVWriter_Memcpy,
                                        .reader    = KVReader_Memcpy,
                                        .datacache = &s_kv_cache_backing.simple_pod_data,
@@ -776,7 +763,7 @@ TEST_GROUP( db_kv_nvm )
                                        .dataSize  = SimplePODData_size,
                                        .flags     = KV_FLAG_DEFAULT_VOLATILE } );
 
-    test_storage.kv_nodes.push_back( { .hashKey   = KEY_KINDA_COMPLEX_POD_DATA,
+    test_storage.node_dsc.push_back( { .hashKey   = KEY_KINDA_COMPLEX_POD_DATA,
                                        .writer    = KVWriter_Memcpy,
                                        .reader    = KVReader_Memcpy,
                                        .datacache = &s_kv_cache_backing.kinda_complex_pod_data,
@@ -784,7 +771,7 @@ TEST_GROUP( db_kv_nvm )
                                        .dataSize  = KindaComplexPODData_size,
                                        .flags     = KV_FLAG_DEFAULT_VOLATILE } );
 
-    test_storage.kv_nodes.push_back( { .hashKey   = KEY_ETL_STRING_DATA,
+    test_storage.node_dsc.push_back( { .hashKey   = KEY_ETL_STRING_DATA,
                                        .writer    = KVWriter_EtlString,
                                        .reader    = KVReader_EtlString,
                                        .datacache = &s_kv_cache_backing.etl_string_data,
@@ -793,28 +780,19 @@ TEST_GROUP( db_kv_nvm )
                                        .flags     = KV_FLAG_DEFAULT_VOLATILE } );
 
     /*-------------------------------------------------------------------------
-    Configure the RAM database
-    -------------------------------------------------------------------------*/
-    RamKVDB::Config ram_config;
-    ram_config.node_storage     = &test_storage.kv_nodes;
-    ram_config.transcode_buffer = test_storage.transcode_buffer;
-
-    CHECK( DB_ERR_NONE == test_storage.kv_ram_db.configure( ram_config ) );
-
-    /*-------------------------------------------------------------------------
     Configure the NVM database
     -------------------------------------------------------------------------*/
-    test_config.dev_name  = test_dflt_dev_name.c_str();
-    test_config.part_name = test_dflt_partition.c_str();
-    test_config.ram_kvdb  = &test_storage.kv_ram_db;
+    test_config.dev_name             = test_dflt_dev_name.c_str();
+    test_config.part_name            = test_dflt_partition.c_str();
+    test_config.ext_node_dsc         = &test_storage.node_dsc;
+    test_config.ext_transcode_buffer = test_storage.transcode_buffer;
 
+    expect::mb$::osal$::createRecursiveMutex( IgnoreParameter(), true );
     CHECK( DB_ERR_NONE == test_kvdb.configure( test_config ) );
 
     /*-------------------------------------------------------------------------
     Initialize the NVM database
     -------------------------------------------------------------------------*/
-    // Once for RAM mutex, second for NVM mutex
-    expect::mb$::osal$::createRecursiveMutex( 2, IgnoreParameter(), true );
     expect::mb$::system$::atexit$::registerCallback( harness::system::atexit::stub_atexit_do_nothing, IgnoreParameter(), true );
 
     CHECK( test_kvdb.init() );
@@ -855,35 +833,26 @@ TEST( db_kv_nvm, init_unable_to_acquire_mutex_resources )
   mock().ignoreOtherCalls();
 
   /*-------------------------------------------------------------------------
-  Configure the RAM database
-  -------------------------------------------------------------------------*/
-  RamKVDB::Config ram_config;
-  ram_config.node_storage     = &test_storage.kv_nodes;
-  ram_config.transcode_buffer = test_storage.transcode_buffer;
-
-  CHECK( DB_ERR_NONE == ram_db.configure( ram_config ) );
-
-  /*-------------------------------------------------------------------------
   Configure the NVM database
   -------------------------------------------------------------------------*/
-  test_config.dev_name  = test_dflt_dev_name.c_str();
-  test_config.part_name = test_dflt_partition.c_str();
-  test_config.ram_kvdb  = &ram_db;
-
-  CHECK( DB_ERR_NONE == nvm_db.configure( test_config ) );
+  test_config.dev_name             = test_dflt_dev_name.c_str();
+  test_config.part_name            = test_dflt_partition.c_str();
+  test_config.ext_node_dsc         = &test_storage.node_dsc;
+  test_config.ext_transcode_buffer = test_storage.transcode_buffer;
 
   /*---------------------------------------------------------------------------
   Force a failure in the call to RamKVDB::init()
   ---------------------------------------------------------------------------*/
-  expect::mb$::osal$::createRecursiveMutex( IgnoreParameter(), false );
   CHECK( !nvm_db.init() );
 
   /*---------------------------------------------------------------------------
   Now allow the RamKVDB::init() to pass, but the NvmKVDB::init() to fail
   ---------------------------------------------------------------------------*/
   expect::mb$::osal$::createRecursiveMutex( IgnoreParameter(), true );
-  expect::mb$::osal$::createRecursiveMutex( IgnoreParameter(), false );
-  CHECK( !nvm_db.init() );
+  CHECK( DB_ERR_NONE == nvm_db.configure( test_config ) );
+
+  expect::mb$::system$::atexit$::registerCallback( harness::system::atexit::stub_atexit_do_nothing, IgnoreParameter(), true );
+  CHECK( nvm_db.init() );
 }
 
 TEST( db_kv_nvm, construction_of_invalid_database_fails )
@@ -896,7 +865,6 @@ TEST( db_kv_nvm, construction_of_invalid_database_fails )
   ---------------------------------------------------------------------------*/
   config.dev_name  = "";
   config.part_name = "hello";
-  config.ram_kvdb  = test_config.ram_kvdb;
 
   CHECK( DB_ERR_BAD_ARG == kvdb.configure( config ) );
 
@@ -905,7 +873,6 @@ TEST( db_kv_nvm, construction_of_invalid_database_fails )
   ---------------------------------------------------------------------------*/
   config.dev_name  = "hello";
   config.part_name = "";
-  config.ram_kvdb  = test_config.ram_kvdb;
 
   CHECK( DB_ERR_BAD_ARG == kvdb.configure( config ) );
 
@@ -914,7 +881,7 @@ TEST( db_kv_nvm, construction_of_invalid_database_fails )
   ---------------------------------------------------------------------------*/
   config.dev_name  = "hello";
   config.part_name = "hello";
-  config.ram_kvdb  = nullptr;
+  // TODO
 
   CHECK( DB_ERR_BAD_ARG == kvdb.configure( config ) );
 
@@ -1289,7 +1256,8 @@ TEST( db_kv_nvm, rw_policy_4 )
   new_node.datacache = &s_kv_cache_backing.variable_pod_data;
   new_node.pbFields  = VariableSizedPODData_fields;
   new_node.dataSize  = VariableSizedPODData_size;
-  new_node.flags     = KV_FLAG_PERSISTENT | KV_FLAG_CACHE_POLICY_WRITE_THROUGH | KV_FLAG_CACHE_POLICY_READ_CACHE | KV_FLAG_CACHE_POLICY_READ_THROUGH;
+  new_node.flags     = KV_FLAG_PERSISTENT | KV_FLAG_CACHE_POLICY_WRITE_THROUGH | KV_FLAG_CACHE_POLICY_READ_CACHE |
+                   KV_FLAG_CACHE_POLICY_READ_THROUGH;
 
   CHECK( test_kvdb.insert( new_node ) );
   CHECK( test_kvdb.exists( KEY_VARIABLE_SIZED_POD_DATA ) );
@@ -1378,7 +1346,8 @@ TEST( db_kv_nvm, rw_policy_6 )
   new_node.datacache = &s_kv_cache_backing.variable_pod_data;
   new_node.pbFields  = VariableSizedPODData_fields;
   new_node.dataSize  = VariableSizedPODData_size;
-  new_node.flags     = KV_FLAG_PERSISTENT | KV_FLAG_CACHE_POLICY_WRITE_BACK | KV_FLAG_CACHE_POLICY_READ_CACHE | KV_FLAG_SANITIZE_ON_WRITE;
+  new_node.flags =
+      KV_FLAG_PERSISTENT | KV_FLAG_CACHE_POLICY_WRITE_BACK | KV_FLAG_CACHE_POLICY_READ_CACHE | KV_FLAG_SANITIZE_ON_WRITE;
 
   CHECK( test_kvdb.insert( new_node ) );
   CHECK( test_kvdb.exists( KEY_VARIABLE_SIZED_POD_DATA ) );
@@ -1424,7 +1393,8 @@ TEST( db_kv_nvm, rw_policy_7 )
   new_node.datacache = &s_kv_cache_backing.variable_pod_data;
   new_node.pbFields  = VariableSizedPODData_fields;
   new_node.dataSize  = VariableSizedPODData_size;
-  new_node.flags     = KV_FLAG_PERSISTENT | KV_FLAG_CACHE_POLICY_WRITE_BACK | KV_FLAG_CACHE_POLICY_READ_CACHE | KV_FLAG_SANITIZE_ON_READ;
+  new_node.flags =
+      KV_FLAG_PERSISTENT | KV_FLAG_CACHE_POLICY_WRITE_BACK | KV_FLAG_CACHE_POLICY_READ_CACHE | KV_FLAG_SANITIZE_ON_READ;
 
   CHECK( test_kvdb.insert( new_node ) );
   CHECK( test_kvdb.exists( KEY_VARIABLE_SIZED_POD_DATA ) );
@@ -1475,7 +1445,8 @@ TEST( db_kv_nvm, rw_policy_8 )
   new_node.datacache = &s_kv_cache_backing.variable_pod_data;
   new_node.pbFields  = VariableSizedPODData_fields;
   new_node.dataSize  = VariableSizedPODData_size;
-  new_node.flags     = KV_FLAG_PERSISTENT | KV_FLAG_CACHE_POLICY_WRITE_THROUGH | KV_FLAG_CACHE_POLICY_READ_THROUGH | KV_FLAG_SANITIZE_ON_READ;
+  new_node.flags =
+      KV_FLAG_PERSISTENT | KV_FLAG_CACHE_POLICY_WRITE_THROUGH | KV_FLAG_CACHE_POLICY_READ_THROUGH | KV_FLAG_SANITIZE_ON_READ;
 
   CHECK( test_kvdb.insert( new_node ) );
   CHECK( test_kvdb.exists( KEY_VARIABLE_SIZED_POD_DATA ) );

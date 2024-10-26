@@ -111,7 +111,7 @@ TEST_GROUP( db_mt )
 {
   NvmKVDB                                   test_kvdb;
   NvmKVDB::Config                           test_config;
-  NvmKVDB::Storage<20, 512>                 test_storage;
+  Storage<20, 512>                          test_storage;
   harness::system::atexit::CallbackCopier   atexit_callback_copier;
   std::vector<std::unique_ptr<std::thread>> test_threads;
   std::mutex                                test_thread_cv_mtx;
@@ -155,8 +155,8 @@ TEST_GROUP( db_mt )
     /*-------------------------------------------------------------------------
     Inject some default KV test nodes
     -------------------------------------------------------------------------*/
-    test_storage.kv_nodes.clear();
-    test_storage.kv_nodes.push_back( { .hashKey   = KEY_SIMPLE_POD_DATA,
+    test_storage.node_dsc.clear();
+    test_storage.node_dsc.push_back( { .hashKey   = KEY_SIMPLE_POD_DATA,
                                        .writer    = KVWriter_Memcpy,
                                        .reader    = KVReader_Memcpy,
                                        .datacache = &s_kv_cache_backing.simple_pod_data,
@@ -164,7 +164,7 @@ TEST_GROUP( db_mt )
                                        .dataSize  = SimplePODData_size,
                                        .flags     = KV_FLAG_DEFAULT_VOLATILE } );
 
-    test_storage.kv_nodes.push_back( { .hashKey   = KEY_KINDA_COMPLEX_POD_DATA,
+    test_storage.node_dsc.push_back( { .hashKey   = KEY_KINDA_COMPLEX_POD_DATA,
                                        .writer    = KVWriter_Memcpy,
                                        .reader    = KVReader_Memcpy,
                                        .datacache = &s_kv_cache_backing.kinda_complex_pod_data,
@@ -172,7 +172,7 @@ TEST_GROUP( db_mt )
                                        .dataSize  = KindaComplexPODData_size,
                                        .flags     = KV_FLAG_DEFAULT_VOLATILE } );
 
-    test_storage.kv_nodes.push_back( { .hashKey   = KEY_ETL_STRING_DATA,
+    test_storage.node_dsc.push_back( { .hashKey   = KEY_ETL_STRING_DATA,
                                        .writer    = KVWriter_EtlString,
                                        .reader    = KVReader_EtlString,
                                        .datacache = &s_kv_cache_backing.etl_string_data,
@@ -181,20 +181,12 @@ TEST_GROUP( db_mt )
                                        .flags     = KV_FLAG_DEFAULT_VOLATILE } );
 
     /*-------------------------------------------------------------------------
-    Configure the RAM database
-    -------------------------------------------------------------------------*/
-    RamKVDB::Config ram_config;
-    ram_config.node_storage     = &test_storage.kv_nodes;
-    ram_config.transcode_buffer = test_storage.transcode_buffer;
-
-    CHECK( DB_ERR_NONE == test_storage.kv_ram_db.configure( ram_config ) );
-
-    /*-------------------------------------------------------------------------
     Configure the NVM database
     -------------------------------------------------------------------------*/
-    test_config.dev_name  = test_dflt_dev_name.c_str();
-    test_config.part_name = test_dflt_partition.c_str();
-    test_config.ram_kvdb  = &test_storage.kv_ram_db;
+    test_config.dev_name             = test_dflt_dev_name.c_str();
+    test_config.part_name            = test_dflt_partition.c_str();
+    test_config.ext_node_dsc         = &test_storage.node_dsc;
+    test_config.ext_transcode_buffer = test_storage.transcode_buffer;
 
     CHECK( DB_ERR_NONE == test_kvdb.configure( test_config ) );
 
@@ -369,6 +361,9 @@ TEST( db_mt, multi_writer_multi_reader )
                                   KEY_SIMPLE_POD_DATA, &simple_pod_data, sizeof( simple_pod_data ), test_thread_iterations );
     test_threads.push_back( std::make_unique<std::thread>( thread_func ) );
   }
+
+  /* Start the write threads to prime the cache with the expected values */
+  test_thread_cv.notify_all();
 
   /*---------------------------------------------------------------------------
   Start a bunch of reader threads

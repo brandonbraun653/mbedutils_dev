@@ -61,6 +61,8 @@ TEST_GROUP( nor_adesto )
     // cfg.dev_attr.end_addr   = 0x00FFFFFF;
     cfg.dev_attr.erase_latency = 100;
     //cfg.dev_attr.write_latency = 5;
+
+    mock().ignoreOtherCalls();
   }
 
   void teardown()

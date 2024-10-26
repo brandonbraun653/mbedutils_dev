@@ -10,6 +10,7 @@ create_test_target(
         ${MBEDUTILS_TEST_EXPECT_DIR}/gpio_intf_expect.cpp
         ${MBEDUTILS_TEST_EXPECT_DIR}/spi_intf_expect.cpp
         ${MBEDUTILS_TEST_EXPECT_DIR}/time_intf_expect.cpp
+        ${MBEDUTILS_TEST_MOCK_DIR}/assert_mock.cpp
         ${MBEDUTILS_TEST_MOCK_DIR}/gpio_intf_mock.cpp
         ${MBEDUTILS_TEST_MOCK_DIR}/spi_intf_mock.cpp
         ${MBEDUTILS_TEST_MOCK_DIR}/time_intf_mock.cpp

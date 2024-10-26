@@ -6,9 +6,29 @@ create_test_target(
         test_key_value_db.cpp
     INSTRUMENTED_SOURCES
         ${PROJECT_SOURCE_DIR}/../mbedutils/src/database/db_kv_node.cpp
-        ${PROJECT_SOURCE_DIR}/../mbedutils/src/database/db_kv_mgr.cpp
+        ${PROJECT_SOURCE_DIR}/../mbedutils/src/database/db_kv_nvm.cpp
+        ${PROJECT_SOURCE_DIR}/../mbedutils/src/database/db_kv_ram.cpp
+        ${PROJECT_SOURCE_DIR}/../mbedutils/src/database/db_kv_util.cpp
     DEPENDENT_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/test_kv_db.pb.c
+        ${MBEDUTILS_TEST_EXPECT_DIR}/assert_intf_expect.cpp
+        ${MBEDUTILS_TEST_EXPECT_DIR}/atexit_expect.cpp
+        ${MBEDUTILS_TEST_EXPECT_DIR}/gpio_intf_expect.cpp
+        ${MBEDUTILS_TEST_EXPECT_DIR}/logging_driver_expect.cpp
+        ${MBEDUTILS_TEST_EXPECT_DIR}/mutex_intf_expect.cpp
+        ${MBEDUTILS_TEST_EXPECT_DIR}/nor_flash_expect.cpp
+        ${MBEDUTILS_TEST_EXPECT_DIR}/spi_intf_expect.cpp
+        ${MBEDUTILS_TEST_EXPECT_DIR}/time_intf_expect.cpp
+        ${MBEDUTILS_TEST_FAKE_DIR}/assert_fake.cpp
+        ${MBEDUTILS_TEST_FAKE_DIR}/nor_flash_file.cpp
+        ${MBEDUTILS_TEST_MOCK_DIR}/assert_intf_mock.cpp
+        ${MBEDUTILS_TEST_MOCK_DIR}/atexit_mock.cpp
+        ${MBEDUTILS_TEST_MOCK_DIR}/gpio_intf_mock.cpp
+        ${MBEDUTILS_TEST_MOCK_DIR}/logging_driver_mock.cpp
+        ${MBEDUTILS_TEST_MOCK_DIR}/mutex_intf_mock.cpp
+        ${MBEDUTILS_TEST_MOCK_DIR}/nor_flash_mock.cpp
+        ${MBEDUTILS_TEST_MOCK_DIR}/spi_intf_mock.cpp
+        ${MBEDUTILS_TEST_MOCK_DIR}/time_intf_mock.cpp
         ${PROJECT_SOURCE_DIR}/../mbedutils/lib/flashdb/port/fal/src/fal.c
         ${PROJECT_SOURCE_DIR}/../mbedutils/lib/flashdb/port/fal/src/fal_flash.c
         ${PROJECT_SOURCE_DIR}/../mbedutils/lib/flashdb/port/fal/src/fal_partition.c
@@ -19,22 +39,7 @@ create_test_target(
         ${PROJECT_SOURCE_DIR}/../mbedutils/lib/nanopb/pb_common.c
         ${PROJECT_SOURCE_DIR}/../mbedutils/lib/nanopb/pb_decode.c
         ${PROJECT_SOURCE_DIR}/../mbedutils/lib/nanopb/pb_encode.c
-        ${MBEDUTILS_TEST_EXPECT_DIR}/assert_intf_expect.cpp
-        ${MBEDUTILS_TEST_EXPECT_DIR}/atexit_expect.cpp
-        ${MBEDUTILS_TEST_EXPECT_DIR}/gpio_intf_expect.cpp
-        ${MBEDUTILS_TEST_EXPECT_DIR}/mutex_intf_expect.cpp
-        ${MBEDUTILS_TEST_EXPECT_DIR}/nor_flash_expect.cpp
-        ${MBEDUTILS_TEST_EXPECT_DIR}/spi_intf_expect.cpp
-        ${MBEDUTILS_TEST_EXPECT_DIR}/time_intf_expect.cpp
-        ${MBEDUTILS_TEST_FAKE_DIR}/assert_fake.cpp
-        ${MBEDUTILS_TEST_FAKE_DIR}/nor_flash_file.cpp
-        ${MBEDUTILS_TEST_MOCK_DIR}/assert_intf_mock.cpp
-        ${MBEDUTILS_TEST_MOCK_DIR}/atexit_mock.cpp
-        ${MBEDUTILS_TEST_MOCK_DIR}/gpio_intf_mock.cpp
-        ${MBEDUTILS_TEST_MOCK_DIR}/mutex_intf_mock.cpp
-        ${MBEDUTILS_TEST_MOCK_DIR}/nor_flash_mock.cpp
-        ${MBEDUTILS_TEST_MOCK_DIR}/spi_intf_mock.cpp
-        ${MBEDUTILS_TEST_MOCK_DIR}/time_intf_mock.cpp
+        ${TESTING_COMMON_SOURCES}
     INCLUDE_DIRS
         ./
         ${TESTING_INCLUDE_DIRECTORIES}
