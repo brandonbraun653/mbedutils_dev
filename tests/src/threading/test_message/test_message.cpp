@@ -157,7 +157,7 @@ TEST( MessageQueue, push_pop_single_message )
   /*---------------------------------------------------------------------------
   Prepare the test
   ---------------------------------------------------------------------------*/
-  push_data.id    = TEST_MSG_ID_1;
+  push_data.id  = TEST_MSG_ID_1;
   push_msg.data = &push_data;
   push_msg.size = sizeof( TestTaskMsg );
 
@@ -194,17 +194,17 @@ TEST( MessageQueue, multi_message_with_priority )
 
   for( size_t i = 0; i < test_data.size(); i++ )
   {
-    test_data[i].id = static_cast<MessageId>( i );
+    test_data[ i ].id = static_cast<MessageId>( i );
     test_msgs.push_back( Message() );
-    test_msgs.back().data = &test_data[i];
-    test_msgs.back().size = sizeof( TestTaskMsg );
+    test_msgs.back().data     = &test_data[ i ];
+    test_msgs.back().size     = sizeof( TestTaskMsg );
     test_msgs.back().priority = rand();
   }
 
   /*---------------------------------------------------------------------------
   Push the messages onto the queue, initially unsorted
   ---------------------------------------------------------------------------*/
-  for( auto& msg : test_msgs )
+  for( auto &msg : test_msgs )
   {
     CHECK( test_queue->push( msg ) == true );
   }
@@ -228,4 +228,37 @@ TEST( MessageQueue, multi_message_with_priority )
     CHECK( msg.sender == pop_msg.sender );
     CHECK( msg.priority == pop_msg.priority );
   }
+}
+
+TEST( MessageQueue, push_to_queue_until_full )
+{
+  etl::array<TestTaskMsg, TSK_MSG_POOL_DEPTH> test_data;
+  etl::vector<Message, TSK_MSG_POOL_DEPTH>    test_msgs;
+
+  for( size_t i = 0; i < test_data.size(); i++ )
+  {
+    test_data[ i ].id = static_cast<MessageId>( i );
+    test_msgs.push_back( Message() );
+    test_msgs.back().data     = &test_data[ i ];
+    test_msgs.back().size     = sizeof( TestTaskMsg );
+    test_msgs.back().priority = rand();
+  }
+
+  /*---------------------------------------------------------------------------
+  Push the messages onto the queue, initially unsorted
+  ---------------------------------------------------------------------------*/
+  for( auto &msg : test_msgs )
+  {
+    CHECK( test_queue->push( msg ) == true );
+  }
+
+  /*---------------------------------------------------------------------------
+  Attempt to push one more message, should fail
+  ---------------------------------------------------------------------------*/
+  Message     msg;
+  TestTaskMsg data;
+  msg.data = &data;
+  msg.size = sizeof( TestTaskMsg );
+
+  CHECK( test_queue->push( msg ) == false );
 }

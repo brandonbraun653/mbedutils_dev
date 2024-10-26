@@ -42,7 +42,7 @@ TEST( ThreadInterface, CreateAndDestroyTask )
 {
   std::atomic<bool> task_executed{ false };
 
-  mb::thread::TaskConfig cfg;
+  mb::thread::Task::Config cfg;
   cfg.func = []( void *user_data ) {
     auto *executed = static_cast<std::atomic<bool> *>( user_data );
     *executed      = true;
@@ -73,7 +73,7 @@ TEST( ThreadInterface, SetAffinity )
 {
   std::atomic<bool> task_executed{ false };
 
-  mb::thread::TaskConfig cfg;
+  mb::thread::Task::Config cfg;
   cfg.func = []( void *user_data ) {
     auto *executed = static_cast<std::atomic<bool> *>( user_data );
     *executed      = true;
