@@ -1,11 +1,11 @@
 include(${MBEDUTILS_TEST_DIR}/test_target.cmake)
 create_test_target(
     TARGET
-        TestCoreThreadSTL
+        TestThreadingThreadSTL
     TEST_SOURCES
-        test_core_thread_stl.cpp
+        test_thread_stl.cpp
     INSTRUMENTED_SOURCES
-        ${PROJECT_SOURCE_DIR}/../mbedutils/src/core/thread.cpp
+        ${PROJECT_SOURCE_DIR}/../mbedutils/src/threading/thread.cpp
     DEPENDENT_SOURCES
         ${TESTING_COMMON_SOURCES}
     INCLUDE_DIRS

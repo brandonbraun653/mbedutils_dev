@@ -1,9 +1,9 @@
 /******************************************************************************
  *  File Name:
- *    test_core_thread_stl.cpp
+ *    test_thread_stl.cpp
  *
  *  Description:
- *    Higher level tests for the core thread module using the STL interfaces.
+ *    Higher level tests for the thread module using the STL interfaces.
  *
  *  2024 | Brandon Braun | brandonbraun653@protonmail.com
  *****************************************************************************/
@@ -24,7 +24,7 @@ int main( int argc, char **argv )
 }
 
 /* clang-format off */
-TEST_GROUP( core_thread_stl )
+TEST_GROUP( thread_stl )
 {
   void setup()
   {
@@ -36,7 +36,7 @@ TEST_GROUP( core_thread_stl )
 };  /* clang-format on */
 
 
-TEST( core_thread_stl, nominal_thread_creation )
+TEST( thread_stl, nominal_thread_creation )
 {
   CHECK( true );
 }
