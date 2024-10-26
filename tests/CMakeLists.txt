@@ -8,7 +8,7 @@ endif()
 add_subdirectory(${PROJECT_SOURCE_DIR}/../lib/cpputest ${CMAKE_CURRENT_BINARY_DIR}/cpputest)
 
 # Include Dependent Headers
-set(TESTING_INCLUDE_DIRECTORIES
+set(TESTING_COMMON_INCLUDE_DIRS
   ${PROJECT_SOURCE_DIR}/../mbedutils/include
   ${PROJECT_SOURCE_DIR}/../mbedutils/lib/cobs
   ${PROJECT_SOURCE_DIR}/../mbedutils/lib/nanopb
@@ -34,16 +34,18 @@ target_include_directories(mbedutils_headers
     ${PROJECT_SOURCE_DIR}/../lib/etl/include
 )
 
+add_subdirectory(src/core/thread/test_thread_stl)
+add_subdirectory(src/database/test_key_value_db)
+add_subdirectory(src/database/test_key_value_db_mt)
 add_subdirectory(src/interfaces/sim/test_mutex_stl)
 add_subdirectory(src/interfaces/sim/test_smphr_stl)
 add_subdirectory(src/interfaces/sim/test_thread_stl)
-add_subdirectory(src/database/test_key_value_db)
-add_subdirectory(src/database/test_key_value_db_mt)
 add_subdirectory(src/memory/nvm/test_nor_adesto)
 add_subdirectory(src/memory/nvm/test_nor_flash)
 
 add_custom_target(BuildAllTests)
 add_dependencies(BuildAllTests
+  TestCoreThreadSTL
   TestIntfMutexStl
   TestIntfSmphrStl
   TestIntfThreadStl

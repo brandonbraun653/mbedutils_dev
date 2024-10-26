@@ -43,7 +43,7 @@ create_test_target(
     INCLUDE_DIRS
         ./
         ./../test_key_value_db
-        ${TESTING_INCLUDE_DIRECTORIES}
+        ${TESTING_COMMON_INCLUDE_DIRS}
     LIBRARIES
         mbedutils_headers
         mbedutils_internal_headers

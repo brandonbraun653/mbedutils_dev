@@ -42,7 +42,7 @@ create_test_target(
         ${TESTING_COMMON_SOURCES}
     INCLUDE_DIRS
         ./
-        ${TESTING_INCLUDE_DIRECTORIES}
+        ${TESTING_COMMON_INCLUDE_DIRS}
     LIBRARIES
         mbedutils_lib_stl
         mbedutils_headers

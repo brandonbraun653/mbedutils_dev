@@ -15,7 +15,7 @@ create_test_target(
         ${MBEDUTILS_TEST_MOCK_DIR}/spi_intf_mock.cpp
         ${MBEDUTILS_TEST_MOCK_DIR}/time_intf_mock.cpp
     INCLUDE_DIRS
-        ${TESTING_INCLUDE_DIRECTORIES}
+        ${TESTING_COMMON_INCLUDE_DIRS}
     LIBRARIES
         mbedutils_headers
         mbedutils_internal_headers

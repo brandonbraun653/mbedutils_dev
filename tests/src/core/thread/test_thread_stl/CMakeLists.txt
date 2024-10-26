@@ -1,11 +1,13 @@
 include(${MBEDUTILS_TEST_DIR}/test_target.cmake)
 create_test_target(
     TARGET
-        TestIntfSmphrStl
+        TestCoreThreadSTL
     TEST_SOURCES
-        test_smphr_stl.cpp
+        test_core_thread_stl.cpp
     INSTRUMENTED_SOURCES
-        ${PROJECT_SOURCE_DIR}/../lib/mbedutils_sim/smphr_stl.cpp
+        ${PROJECT_SOURCE_DIR}/../mbedutils/src/core/thread.cpp
+    DEPENDENT_SOURCES
+        ${TESTING_COMMON_SOURCES}
     INCLUDE_DIRS
         ${TESTING_COMMON_INCLUDE_DIRS}
     LIBRARIES
