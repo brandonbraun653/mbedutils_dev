@@ -46,8 +46,6 @@ add_subdirectory(src/memory/nvm/test_nor_flash)
 
 add_custom_target(BuildAllTests)
 add_dependencies(BuildAllTests
-  TestThreadingMessage
-  TestThreadingThread
   TestIntfMutexStl
   TestIntfSmphrStl
   TestIntfThreadStl
@@ -55,4 +53,7 @@ add_dependencies(BuildAllTests
   TestKeyValueDatabaseMT
   TestNorAdesto
   TestNorFlash
+  TestThreadingMessage
+  TestThreadingThread
+  TestThreading_ThisThread_STL
 )

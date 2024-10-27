@@ -28,7 +28,7 @@ TEST_GROUP(ThreadInterface)
 {
   void setup()
   {
-    mb::thread::intf::initialize();
+    mb::thread::intf::driver_setup();
   }
 
   void teardown()
