@@ -3,7 +3,7 @@
  *    test_this_thread.cpp
  *
  *  Description:
- *    Higher level tests for the thread module using the STL interfaces.
+ *    Integration tests for the thread module using the STL interfaces.
  *
  *  2024 | Brandon Braun | brandonbraun653@protonmail.com
  *****************************************************************************/
@@ -51,13 +51,6 @@ TEST_GROUP( this_thread )
     mock().ignoreOtherCalls();
 
     /*-------------------------------------------------------------------------
-    Prepare the driver to successfully initialize
-    -------------------------------------------------------------------------*/
-    expect::mb$::osal$::createMutex( IgnoreParameter(), true );
-    expect::mb$::assert$::log_assert_failure( true, IgnoreParameter(), IgnoreParameter(), IgnoreParameter(), true );
-    expect::mb$::assert$::log_assert_failure( true, IgnoreParameter(), IgnoreParameter(), IgnoreParameter(), true );
-
-    /*-------------------------------------------------------------------------
     Power up the thread driver
     -------------------------------------------------------------------------*/
     Internal::ModuleConfig cfg;
@@ -67,6 +60,9 @@ TEST_GROUP( this_thread )
 
   void teardown()
   {
+    /*-------------------------------------------------------------------------
+    Power down the thread driver
+    -------------------------------------------------------------------------*/
     mb::thread::driver_teardown();
 
     mock().checkExpectations();
