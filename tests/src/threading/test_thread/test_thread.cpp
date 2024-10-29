@@ -29,7 +29,7 @@ implementation details.
 -----------------------------------------------------------------------------*/
 namespace mb::thread
 {
-  Task::Task() noexcept : taskId( TASK_ID_INVALID ), taskImpl( nullptr )
+  Task::Task() noexcept : mId( TASK_ID_INVALID ), taskHndl( nullptr )
   {
   }
 
@@ -41,8 +41,8 @@ namespace mb::thread
 
   Task &Task::operator=( Task &&other ) noexcept
   {
-    this->taskId = other.taskId;
-    this->taskImpl  = other.taskImpl;
+    this->mId = other.mId;
+    this->taskHndl  = other.taskHndl;
     return *this;
   }
 
@@ -70,19 +70,19 @@ namespace mb::thread
 
   TaskId Task::id() const
   {
-    return taskId;
+    return mId;
   }
 
 
   TaskName Task::name() const
   {
-    return taskName;
+    return mName;
   }
 
 
   TaskHandle Task::implementation() const
   {
-    return taskImpl;
+    return taskHndl;
   }
 }
 

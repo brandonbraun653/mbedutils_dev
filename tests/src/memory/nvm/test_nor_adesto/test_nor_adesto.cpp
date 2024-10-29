@@ -35,9 +35,9 @@ static constexpr uint16_t at25sf_busy_flag  = 0x0001;
 Tests
 -----------------------------------------------------------------------------*/
 
-int main(int argc, char **argv)
+int main( int argc, char **argv )
 {
-    return RUN_ALL_TESTS(argc, argv);
+  return RUN_ALL_TESTS( argc, argv );
 }
 
 
@@ -60,7 +60,7 @@ TEST_GROUP( nor_adesto )
     // cfg.dev_attr.start_addr = 0x00000000;
     // cfg.dev_attr.end_addr   = 0x00FFFFFF;
     cfg.dev_attr.erase_latency = 100;
-    //cfg.dev_attr.write_latency = 5;
+    // cfg.dev_attr.write_latency = 5;
 
     mock().ignoreOtherCalls();
   }
@@ -84,25 +84,27 @@ TEST_GROUP( nor_adesto )
     /*-------------------------------------------------------------------------
     Set the data to be returned for the status register read
     -------------------------------------------------------------------------*/
-    fake_status_register_byte1[ call_num ][ 0 ] = 0x00;   // Dummy byte of the transfer
+    fake_status_register_byte1[ call_num ][ 0 ] = 0x00;    // Dummy byte of the transfer
     fake_status_register_byte1[ call_num ][ 1 ] = ret_val & 0xFF;
 
-    fake_status_register_byte2[ call_num ][ 0 ] = 0x00;   // Dummy byte of the transfer
+    fake_status_register_byte2[ call_num ][ 0 ] = 0x00;    // Dummy byte of the transfer
     fake_status_register_byte2[ call_num ][ 1 ] = ( ret_val >> 8 ) & 0xFF;
 
     /* First call to transfer */
-    mock().expectOneCall( "mb::hw::spi::intf::transfer" )
-          .withParameter( "port", cfg.spi_port )
-          .withOutputParameterReturning( "rx", fake_status_register_byte1[ call_num ], 2 )
-          .withParameter( "length", 2 )
-          .ignoreOtherParameters();
+    mock()
+        .expectOneCall( "mb::hw::spi::intf::transfer" )
+        .withParameter( "port", cfg.spi_port )
+        .withOutputParameterReturning( "rx", fake_status_register_byte1[ call_num ], 2 )
+        .withParameter( "length", 2 )
+        .ignoreOtherParameters();
 
     /* Second call to transfer */
-    mock().expectOneCall( "mb::hw::spi::intf::transfer" )
-          .withParameter( "port", cfg.spi_port )
-          .withOutputParameterReturning( "rx", fake_status_register_byte2[ call_num ], 2 )
-          .withParameter( "length", 2 )
-          .ignoreOtherParameters();
+    mock()
+        .expectOneCall( "mb::hw::spi::intf::transfer" )
+        .withParameter( "port", cfg.spi_port )
+        .withOutputParameterReturning( "rx", fake_status_register_byte2[ call_num ], 2 )
+        .withParameter( "length", 2 )
+        .ignoreOtherParameters();
   }
 };
 
@@ -140,9 +142,9 @@ TEST( nor_adesto, at25sfxx_pend_event__device_busy_timeout )
   /*---------------------------------------------------------------------------
   Initialize
   ---------------------------------------------------------------------------*/
-  expect::mb$::time$::millis( 1, 100 ); // Initializes start time
-  expect::mb$::time$::millis( 1, 110 ); // Cause a second iteration
-  expect::mb$::time$::millis( 1, 150 ); // Causes the timeout to occur
+  expect::mb$::time$::millis( 1, 100 );    // Initializes start time
+  expect::mb$::time$::millis( 1, 110 );    // Cause a second iteration
+  expect::mb$::time$::millis( 1, 150 );    // Causes the timeout to occur
 
   mock().expectOneCall( "mb::time::delayMilliseconds" ).ignoreOtherParameters();
 
@@ -166,9 +168,9 @@ TEST( nor_adesto, at25sfxx_pend_event__device_busy_then_ready )
   /*---------------------------------------------------------------------------
   Initialize
   ---------------------------------------------------------------------------*/
-  expect::mb$::time$::millis( 1, 100 ); // Initializes start time
-  expect::mb$::time$::millis( 1, 110 ); // Cause a second iteration
-  expect::mb$::time$::millis( 1, 120 ); // Cause a third iteration
+  expect::mb$::time$::millis( 1, 100 );    // Initializes start time
+  expect::mb$::time$::millis( 1, 110 );    // Cause a second iteration
+  expect::mb$::time$::millis( 1, 120 );    // Cause a third iteration
 
   mock().expectNCalls( 2, "mb::time::delayMilliseconds" ).ignoreOtherParameters();
 

@@ -39,7 +39,7 @@ public:
   SimpleString valueToString( const void *object ) override
   {
     const mb::thread::Task::Config *cfg = static_cast<const mb::thread::Task::Config *>( object );
-    return StringFromFormat( "Task::Config{id=%d, name=%s, priority=%d, msg_queue=%p}", cfg->id, cfg->name, cfg->priority,
+    return StringFromFormat( "Task::Config{id=%ld, name=%s, priority=%d, msg_queue=%p}", cfg->id, cfg->name.data(), cfg->priority,
                              cfg->msg_queue_inst );
   }
 };
