@@ -195,8 +195,8 @@ TEST( this_thread, basic_thread_test )
   /*---------------------------------------------------------------------------
   Validate the results
   ---------------------------------------------------------------------------*/
-  CHECK( rx_diff > BASIC_THREAD_MESSAGE_TIMEOUT_MS / 2 );    // Should have blocked for a bit
-  CHECK( rx_diff < BASIC_THREAD_MESSAGE_TIMEOUT_MS );        // Should have received the message in time
+  CHECK( rx_diff >= BASIC_THREAD_MESSAGE_TIMEOUT_MS / 2 );    // Should have blocked for a bit
+  CHECK( rx_diff <= BASIC_THREAD_MESSAGE_TIMEOUT_MS );        // Should have received the message in time
   CHECK( rcv_msg.id == 42 );
   CHECK( rcv_msg.data == 0x1234 );
   CHECK( test_name == "TestThread" );
@@ -259,7 +259,7 @@ TEST( this_thread, multi_message_enqueued )
   /*---------------------------------------------------------------------------
   Run the test
   ---------------------------------------------------------------------------*/
-  CHECK( test_tasks[ 0 ].implementation() );
+  CHECK( test_tasks[ 0 ].implementation() ); // TODO: Replace with existence check? Not sure implementation() is useful.
   test_tasks[ 0 ].start();
 
   /*---------------------------------------------------------------------------

@@ -7,7 +7,6 @@ create_test_target(
     INSTRUMENTED_SOURCES
         ${PROJECT_SOURCE_DIR}/../mbedutils/src/threading/thread.cpp
     DEPENDENT_SOURCES
-        ${TESTING_COMMON_SOURCES}
         ${MBEDUTILS_TEST_EXPECT_DIR}/assert_expect.cpp
         ${MBEDUTILS_TEST_EXPECT_DIR}/mutex_intf_expect.cpp
         ${MBEDUTILS_TEST_EXPECT_DIR}/smphr_intf_expect.cpp
@@ -18,7 +17,9 @@ create_test_target(
         ${MBEDUTILS_TEST_MOCK_DIR}/smphr_intf_mock.cpp
         ${MBEDUTILS_TEST_MOCK_DIR}/thread_intf_mock.cpp
         ${MBEDUTILS_TEST_MOCK_DIR}/time_intf_mock.cpp
+        ${PROJECT_SOURCE_DIR}/../mbedutils/src/threading/condition.cpp
         ${PROJECT_SOURCE_DIR}/../mbedutils/src/threading/message.cpp
+        ${TESTING_COMMON_SOURCES}
     INCLUDE_DIRS
         ./
         ${TESTING_COMMON_INCLUDE_DIRS}
@@ -45,6 +46,7 @@ create_test_target(
         ${PROJECT_SOURCE_DIR}/../lib/mbedutils_sim/smphr_stl.cpp
         ${PROJECT_SOURCE_DIR}/../lib/mbedutils_sim/thread_stl.cpp
         ${PROJECT_SOURCE_DIR}/../lib/mbedutils_sim/time_stl.cpp
+        ${PROJECT_SOURCE_DIR}/../mbedutils/src/threading/condition.cpp
         ${PROJECT_SOURCE_DIR}/../mbedutils/src/threading/message.cpp
         ${TESTING_COMMON_SOURCES}
     INCLUDE_DIRS
