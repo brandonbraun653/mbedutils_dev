@@ -50,7 +50,8 @@ TEST( ThreadInterface, CreateAndDestroyTask )
   cfg.user_data = &task_executed;
 
   auto handle = mb::thread::intf::create_task( cfg );
-  CHECK( handle != nullptr );
+  CHECK( handle );
+  mb::thread::intf::start_scheduler();
 
   // Give some time for the task to execute
   std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
@@ -62,8 +63,7 @@ TEST( ThreadInterface, CreateAndDestroyTask )
 
 TEST( ThreadInterface, DestroyNonExistentTask )
 {
-  mb::thread::TaskHandle invalid_handle = reinterpret_cast<mb::thread::TaskHandle>( 0xDEADBEEF );
-  mb::thread::intf::destroy_task( invalid_handle );
+  mb::thread::intf::destroy_task( 0xDEADBEEF );
 
   // No crash or exception should occur
   CHECK( true );
@@ -81,9 +81,10 @@ TEST( ThreadInterface, SetAffinity )
   cfg.user_data = &task_executed;
 
   auto handle = mb::thread::intf::create_task( cfg );
-  CHECK( handle != nullptr );
+  CHECK( handle );
 
   mb::thread::intf::set_affinity( handle, 0 );
+  mb::thread::intf::start_scheduler();
 
   // Give some time for the task to execute
   std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );

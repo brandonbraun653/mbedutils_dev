@@ -10,10 +10,15 @@ create_test_target(
         ${TESTING_COMMON_SOURCES}
         ${MBEDUTILS_TEST_EXPECT_DIR}/assert_expect.cpp
         ${MBEDUTILS_TEST_EXPECT_DIR}/mutex_intf_expect.cpp
+        ${MBEDUTILS_TEST_EXPECT_DIR}/smphr_intf_expect.cpp
         ${MBEDUTILS_TEST_EXPECT_DIR}/thread_intf_expect.cpp
+        ${MBEDUTILS_TEST_EXPECT_DIR}/time_intf_expect.cpp
         ${MBEDUTILS_TEST_MOCK_DIR}/assert_mock.cpp
         ${MBEDUTILS_TEST_MOCK_DIR}/mutex_intf_mock.cpp
+        ${MBEDUTILS_TEST_MOCK_DIR}/smphr_intf_mock.cpp
         ${MBEDUTILS_TEST_MOCK_DIR}/thread_intf_mock.cpp
+        ${MBEDUTILS_TEST_MOCK_DIR}/time_intf_mock.cpp
+        ${PROJECT_SOURCE_DIR}/../mbedutils/src/threading/message.cpp
     INCLUDE_DIRS
         ./
         ${TESTING_COMMON_INCLUDE_DIRS}

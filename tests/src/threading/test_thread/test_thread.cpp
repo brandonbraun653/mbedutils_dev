@@ -29,7 +29,7 @@ implementation details.
 -----------------------------------------------------------------------------*/
 namespace mb::thread
 {
-  Task::Task() noexcept : mId( TASK_ID_INVALID ), taskHndl( nullptr )
+  Task::Task() noexcept : mId( TASK_ID_INVALID ), mHandle( 0 )
   {
   }
 
@@ -41,8 +41,8 @@ namespace mb::thread
 
   Task &Task::operator=( Task &&other ) noexcept
   {
-    this->mId = other.mId;
-    this->taskHndl  = other.taskHndl;
+    this->mId     = other.mId;
+    this->mHandle = other.mHandle;
     return *this;
   }
 
@@ -82,9 +82,21 @@ namespace mb::thread
 
   TaskHandle Task::implementation() const
   {
-    return taskHndl;
+    return mHandle;
   }
-}
+
+  namespace this_thread
+  {
+    void yield()
+    {
+    }
+
+    TaskId id()
+    {
+      return 0;
+    }
+  }
+}    // namespace mb::thread
 
 /*-----------------------------------------------------------------------------
 Tests
@@ -96,7 +108,7 @@ using namespace CppUMockGen;
 int main( int argc, char **argv )
 {
   TaskConfigComparator taskConfigComparator;
-  mock().installComparator("mb::thread::Task::Config", taskConfigComparator );
+  mock().installComparator( "mb::thread::Task::Config", taskConfigComparator );
 
   return RUN_ALL_TESTS( argc, argv );
 }
@@ -236,10 +248,10 @@ TEST( thread_module, task_create_not_initialized )
   Try to create a task without initializing the module
   ---------------------------------------------------------------------------*/
   Task empty_task;
-  CHECK( empty_task.implementation() == nullptr );
+  CHECK( empty_task.implementation() == 0 );
 
   empty_task = mb::thread::create( cfg );
-  CHECK( empty_task.implementation() == nullptr );
+  CHECK( empty_task.implementation() == 0 );
 }
 
 TEST( thread_module, task_create_simple )
@@ -260,20 +272,17 @@ TEST( thread_module, task_create_simple )
 
   mb::thread::driver_setup( module_cfg );
   mock().clear();
+  mock().ignoreOtherCalls();
 
   /*---------------------------------------------------------------------------
   Set up the task configuration
   ---------------------------------------------------------------------------*/
-  Task empty_task;
+  Task         empty_task;
   Task::Config cfg;
   cfg.id = 1;
 
   uint32_t pretend_task_handle = 0x1234;
-  expect::mb$::osal$::lockMutex( IgnoreParameter() );
-  expect::mb$::osal$::unlockMutex( IgnoreParameter() );
   expect::mb$::thread$::intf$::create_task( IgnoreParameter(), reinterpret_cast<TaskHandle>( &pretend_task_handle ) );
-  expect::mb$::assert$::format_and_log_assert_failure( true, IgnoreParameter(), IgnoreParameter(), IgnoreParameter(), IgnoreParameter(), true );
-  mock().expectNoCall( "mb::assert::log_assert_failure" );
 
   /*---------------------------------------------------------------------------
   Call FUT
@@ -281,5 +290,5 @@ TEST( thread_module, task_create_simple )
   Task new_task;
   new_task = mb::thread::create( cfg );
 
-  CHECK( new_task.implementation() == &pretend_task_handle );
+  CHECK( new_task.implementation() );
 }

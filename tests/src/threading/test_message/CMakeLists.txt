@@ -8,7 +8,9 @@ create_test_target(
         ${PROJECT_SOURCE_DIR}/../mbedutils/src/threading/message.cpp
     DEPENDENT_SOURCES
         ${TESTING_COMMON_SOURCES}
+        ${MBEDUTILS_TEST_EXPECT_DIR}/assert_expect.cpp
         ${MBEDUTILS_TEST_EXPECT_DIR}/mutex_intf_expect.cpp
+        ${MBEDUTILS_TEST_MOCK_DIR}/assert_mock.cpp
         ${MBEDUTILS_TEST_MOCK_DIR}/mutex_intf_mock.cpp
     INCLUDE_DIRS
         ${TESTING_COMMON_INCLUDE_DIRS}
