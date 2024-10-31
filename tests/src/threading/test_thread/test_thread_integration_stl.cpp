@@ -52,6 +52,7 @@ TEST_GROUP( this_thread )
 {
   Internal::ControlBlockStorage<32>         test_control_blocks;
   Task::Storage<4096, TestTaskMessage, 15>  test_task_storage;
+  Task::Storage<4096, TestTaskMessage, 15>  test_task_storage2;
   etl::array<Task, 32>                      test_tasks;
 
   void setup()
@@ -288,4 +289,140 @@ TEST( this_thread, multi_message_enqueued )
   ---------------------------------------------------------------------------*/
   test_tasks[ 0 ].join();
   CHECK( s_multi_message_count == MULTI_MESSAGE_COUNT );
+}
+
+
+/*-----------------------------------------------------------------------------
+Basic Test: Send multiple messages and look for a specific one
+-----------------------------------------------------------------------------*/
+static int s_message_22_count;
+static int s_message_33_count;
+
+static bool test_predicate_22( const Message &msg )
+{
+  TestTaskMessage *data = reinterpret_cast<TestTaskMessage *>( msg.data );
+  return data->id == 22;
+}
+
+static bool test_predicate_33( const Message &msg )
+{
+  TestTaskMessage *data = reinterpret_cast<TestTaskMessage *>( msg.data );
+  return data->id == 33;
+}
+
+static void test_thread_consume_message_id_22( void * arg )
+{
+  ( void )arg;
+
+  TestTaskMessage rcv_msg;
+  memset( &rcv_msg, 0, sizeof( rcv_msg ) );
+
+  Message msg;
+  msg.data     = &rcv_msg;
+  msg.size     = sizeof( rcv_msg );
+  msg.sender   = this_thread::id();
+  msg.priority = 0;
+
+  auto predicate = MessagePredicate::create<test_predicate_22>();
+  while( this_thread::awaitMessage( msg, predicate, MULTI_MESSAGE_TIMEOUT_MS ) )
+  {
+    s_message_22_count++;
+  }
+}
+
+static void test_thread_consume_message_id_33( void * arg )
+{
+  ( void )arg;
+
+  TestTaskMessage rcv_msg;
+  memset( &rcv_msg, 0, sizeof( rcv_msg ) );
+
+  Message msg;
+  msg.data     = &rcv_msg;
+  msg.size     = sizeof( rcv_msg );
+  msg.sender   = this_thread::id();
+  msg.priority = 0;
+
+  auto predicate = MessagePredicate::create<test_predicate_33>();
+
+  while( this_thread::awaitMessage( msg, predicate, MULTI_MESSAGE_TIMEOUT_MS ) )
+  {
+    s_message_33_count++;
+  }
+}
+
+TEST( this_thread, multi_message_predicate )
+{
+  /*---------------------------------------------------------------------------
+  Construct the threads
+  ---------------------------------------------------------------------------*/
+  Task::Config cfg;
+  cfg.reset();
+
+  cfg.id                  = 1;
+  cfg.name                = "TestThread";
+  cfg.priority            = 1;
+  cfg.func                = test_thread_consume_message_id_22;
+  cfg.user_data           = nullptr;
+  cfg.affinity            = 0;
+  cfg.msg_queue_inst      = &test_task_storage.msg_queue;
+  cfg.msg_queue_cfg.pool  = &test_task_storage.msg_queue_storage.pool;
+  cfg.msg_queue_cfg.queue = &test_task_storage.msg_queue_storage.queue;
+  cfg.stack_buf           = test_task_storage.stack;
+  cfg.stack_size          = sizeof( test_task_storage.stack ) / sizeof( test_task_storage.stack[ 0 ] );
+
+  test_tasks[ 0 ] = mb::thread::create( cfg );
+
+  cfg.id                  = 2;
+  cfg.name                = "TestThread2";
+  cfg.func                = test_thread_consume_message_id_33;
+  cfg.user_data           = nullptr;
+  cfg.affinity            = 0;
+  cfg.msg_queue_inst      = &test_task_storage2.msg_queue;
+  cfg.msg_queue_cfg.pool  = &test_task_storage2.msg_queue_storage.pool;
+  cfg.msg_queue_cfg.queue = &test_task_storage2.msg_queue_storage.queue;
+  cfg.stack_buf           = test_task_storage2.stack;
+  cfg.stack_size          = sizeof( test_task_storage2.stack ) / sizeof( test_task_storage2.stack[ 0 ] );
+
+  test_tasks[ 1 ] = mb::thread::create( cfg );
+
+  /*---------------------------------------------------------------------------
+  Run the test
+  ---------------------------------------------------------------------------*/
+  CHECK( test_tasks[ 0 ].implementation() );
+  CHECK( test_tasks[ 1 ].implementation() );
+  test_tasks[ 0 ].start();
+  test_tasks[ 1 ].start();
+
+  /*---------------------------------------------------------------------------
+  Send a message to the thread, but do it before the thread is ready to receive
+  ---------------------------------------------------------------------------*/
+  std::this_thread::sleep_for( std::chrono::milliseconds( MULTI_MESSAGE_TIMEOUT_MS / 2 ) );
+
+  TestTaskMessage send_msg;
+  memset( &send_msg, 0, sizeof( send_msg ) );
+  send_msg.id   = 22;
+  send_msg.data = 0x1234;
+
+  Message msg;
+  msg.data     = &send_msg;
+  msg.size     = sizeof( send_msg );
+  msg.sender   = this_thread::id();
+  msg.priority = 0;
+
+  for( size_t i = 0; i < MULTI_MESSAGE_COUNT; i++ )
+  {
+    send_msg.id = 22;
+    CHECK( mb::thread::sendMessage( 1, msg, 100 ) );
+    send_msg.id = 33;
+    CHECK( mb::thread::sendMessage( 2, msg, 100 ) );
+  }
+
+  /*---------------------------------------------------------------------------
+  Wait for the threads to finish
+  ---------------------------------------------------------------------------*/
+  test_tasks[ 0 ].join();
+  test_tasks[ 1 ].join();
+  CHECK( s_message_22_count == MULTI_MESSAGE_COUNT );
+  CHECK( s_message_33_count == MULTI_MESSAGE_COUNT );
 }

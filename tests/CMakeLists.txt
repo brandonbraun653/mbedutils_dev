@@ -34,6 +34,7 @@ target_include_directories(mbedutils_headers
     ${PROJECT_SOURCE_DIR}/../lib/etl/include
 )
 
+add_subdirectory(src/threading/test_condition)
 add_subdirectory(src/threading/test_message)
 add_subdirectory(src/threading/test_thread)
 add_subdirectory(src/database/test_key_value_db)
@@ -53,7 +54,9 @@ add_dependencies(BuildAllTests
   TestKeyValueDatabaseMT
   TestNorAdesto
   TestNorFlash
+  TestThreadingCondition
+  TestThreadingCondition_Integration_STL
   TestThreadingMessage
   TestThreadingThread
-  TestThreading_ThisThread_STL
+  TestThreadingThread_Integration_STL
 )
