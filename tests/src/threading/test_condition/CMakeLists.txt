@@ -57,6 +57,8 @@ create_test_target(
         ${MBEDUTILS_TEST_FAKE_DIR}/assert_fake.cpp
         ${PROJECT_SOURCE_DIR}/../lib/mbedutils_freertos/freertos_mutex.cpp
         ${PROJECT_SOURCE_DIR}/../lib/mbedutils_freertos/freertos_smphr.cpp
+        ${PROJECT_SOURCE_DIR}/../lib/mbedutils_freertos/freertos_thread.cpp
+        ${PROJECT_SOURCE_DIR}/../lib/mbedutils_freertos/freertos_time.cpp
         ${TESTING_COMMON_SOURCES}
     INCLUDE_DIRS
         ${TESTING_COMMON_INCLUDE_DIRS}

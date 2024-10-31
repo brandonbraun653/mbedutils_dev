@@ -13,8 +13,10 @@ Includes
 -----------------------------------------------------------------------------*/
 #include <mbedutils/interfaces/mutex_intf.hpp>
 
-#include "CppUTest/CommandLineTestRunner.h"
-#include "CppUTest/TestHarness.h"
+#include <CppUTest/TestHarness.h>
+#include <CppUTest/CommandLineTestRunner.h>
+#include <CppUTestExt/MockSupport.h>
+#include <CppUTestExt/MockSupportPlugin.h>
 
 /*-----------------------------------------------------------------------------
 Tests
@@ -31,12 +33,15 @@ TEST_GROUP( MutexSTLTests )
 {
   void setup() override
   {
+    mock().ignoreOtherCalls();
     mb::osal::initMutexDriver();
   }
 
   void teardown() override
   {
     // No teardown needed for now
+    mock().checkExpectations();
+    mock().clear();
   }
 };
 /* clang-format on */
