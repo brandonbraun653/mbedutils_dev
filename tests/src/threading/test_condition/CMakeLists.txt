@@ -1,4 +1,6 @@
 include(${MBEDUTILS_TEST_DIR}/test_target.cmake)
+
+# Unit Tests
 create_test_target(
     TARGET
         TestThreadingCondition
@@ -22,11 +24,12 @@ create_test_target(
     EXPORT_DIR ${CMAKE_CURRENT_BINARY_DIR}
 )
 
+# STL Integration Test
 create_test_target(
     TARGET
         TestThreadingCondition_Integration_STL
     TEST_SOURCES
-        test_condition_integration_stl.cpp
+        test_condition_integration.cpp
     INSTRUMENTED_SOURCES
         ${PROJECT_SOURCE_DIR}/../mbedutils/src/threading/condition.cpp
     DEPENDENT_SOURCES
@@ -39,5 +42,27 @@ create_test_target(
     LIBRARIES
         mbedutils_headers
         mbedutils_internal_headers
+    EXPORT_DIR ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+# FreeRTOS Integration Test
+create_test_target(
+    TARGET
+        TestThreadingCondition_Integration_FreeRTOS
+    TEST_SOURCES
+        test_condition_integration.cpp
+    INSTRUMENTED_SOURCES
+        ${PROJECT_SOURCE_DIR}/../mbedutils/src/threading/condition.cpp
+    DEPENDENT_SOURCES
+        ${MBEDUTILS_TEST_FAKE_DIR}/assert_fake.cpp
+        ${PROJECT_SOURCE_DIR}/../lib/mbedutils_freertos/freertos_mutex.cpp
+        ${PROJECT_SOURCE_DIR}/../lib/mbedutils_freertos/freertos_smphr.cpp
+        ${TESTING_COMMON_SOURCES}
+    INCLUDE_DIRS
+        ${TESTING_COMMON_INCLUDE_DIRS}
+    LIBRARIES
+        mbedutils_headers
+        mbedutils_internal_headers
+        mbedutils_test_lib_freertos
     EXPORT_DIR ${CMAKE_CURRENT_BINARY_DIR}
 )

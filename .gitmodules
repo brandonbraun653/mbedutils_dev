@@ -22,3 +22,6 @@
 [submodule "lib/mbedutils_test"]
 	path = lib/mbedutils_test
 	url = https://github.com/brandonbraun653/mbedutils_test.git
+[submodule "lib/freertos"]
+	path = lib/freertos
+	url = https://github.com/FreeRTOS/FreeRTOS-Kernel.git

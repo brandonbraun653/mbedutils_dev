@@ -34,6 +34,7 @@ target_include_directories(mbedutils_headers
     ${PROJECT_SOURCE_DIR}/../lib/etl/include
 )
 
+add_subdirectory(harness/freertos)
 add_subdirectory(src/threading/test_condition)
 add_subdirectory(src/threading/test_message)
 add_subdirectory(src/threading/test_thread)
