@@ -14,9 +14,9 @@ Includes
 #include <mbedutils/threading.hpp>
 #include <thread>
 
-#include "CppUMockGen.hpp"
-#include "CppUTest/CommandLineTestRunner.h"
-#include "CppUTestExt/MockSupport.h"
+#include <CppUMockGen.hpp>
+#include <CppUTest/CommandLineTestRunner.h>
+#include <CppUTestExt/MockSupport.h>
 #include "mbedutils/interfaces/mutex_intf.hpp"
 
 using namespace mb::thread;

@@ -11,10 +11,14 @@
 /*-----------------------------------------------------------------------------
 Includes
 -----------------------------------------------------------------------------*/
+#include <mbedutils/interfaces/thread_intf.hpp>
 #include <mbedutils/interfaces/smphr_intf.hpp>
 
-#include "CppUTest/CommandLineTestRunner.h"
-#include "CppUTest/TestHarness.h"
+#include <tests/harness/test_runtime_harness.hpp>
+#include <CppUTest/CommandLineTestRunner.h>
+#include <CppUTest/TestHarness.h>
+#include <CppUTestExt/MockSupport.h>
+#include <CppUTestExt/MockSupportPlugin.h>
 
 /*-----------------------------------------------------------------------------
 Tests
@@ -23,7 +27,7 @@ Tests
 int main( int argc, char **argv )
 {
   MemoryLeakWarningPlugin::turnOffNewDeleteOverloads();
-  return RUN_ALL_TESTS( argc, argv );
+  return TestHarness::runTests( argc, argv );
 }
 
 /* clang-format off */
@@ -31,12 +35,14 @@ TEST_GROUP( SemaphoreTests )
 {
   void setup() override
   {
+    mock().ignoreOtherCalls();
     mb::osal::initSmphrDriver();
   }
 
   void teardown() override
   {
-    // Cleanup code if needed
+    mock().checkExpectations();
+    mock().clear();
   }
 };
 /* clang-format on */

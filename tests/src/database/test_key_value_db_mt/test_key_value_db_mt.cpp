@@ -23,10 +23,10 @@ Includes
 #include <memory>
 #include <thread>
 
-#include "CppUTest/TestHarness.h"
-#include "CppUTestExt/MockSupport.h"
+#include <CppUTest/TestHarness.h>
+#include <CppUTestExt/MockSupport.h>
 #include "CppUTestExt/MockSupportPlugin.h"
-#include "CppUTest/CommandLineTestRunner.h"
+#include <CppUTest/CommandLineTestRunner.h>
 
 #include "assert_expect.hpp"
 #include "atexit_expect.hpp"

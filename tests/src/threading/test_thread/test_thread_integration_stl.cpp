@@ -24,9 +24,9 @@ Includes
 #include "test_thread_harness.hpp"
 #include "thread_intf_expect.hpp"
 
-#include "CppUMockGen.hpp"
-#include "CppUTestExt/MockSupport.h"
-#include "CppUTest/CommandLineTestRunner.h"
+#include <CppUMockGen.hpp>
+#include <CppUTestExt/MockSupport.h>
+#include <CppUTest/CommandLineTestRunner.h>
 
 /*-----------------------------------------------------------------------------
 Constants

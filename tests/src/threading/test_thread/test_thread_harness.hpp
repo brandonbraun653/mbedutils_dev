@@ -19,7 +19,7 @@ Includes
 -----------------------------------------------------------------------------*/
 #include <mbedutils/threading.hpp>
 
-#include "CppUTestExt/MockSupport.h"
+#include <CppUTestExt/MockSupport.h>
 
 /*-----------------------------------------------------------------------------
 Mock Comparator

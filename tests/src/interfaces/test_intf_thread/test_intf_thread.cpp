@@ -1,6 +1,6 @@
 /******************************************************************************
  *  File Name:
- *    test_thread_stl.cpp
+ *    test_intf_thread.cpp
  *
  *  Description:
  *    Tests the STL based thread implementation for Mbedutils
@@ -16,8 +16,8 @@ Includes
 #include <chrono>
 #include <thread>
 
-#include "CppUTest/CommandLineTestRunner.h"
-#include "CppUTest/TestHarness.h"
+#include <CppUTest/CommandLineTestRunner.h>
+#include <CppUTest/TestHarness.h>
 
 /*-----------------------------------------------------------------------------
 Tests

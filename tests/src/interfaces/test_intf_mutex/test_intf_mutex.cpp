@@ -13,8 +13,8 @@ Includes
 -----------------------------------------------------------------------------*/
 #include <mbedutils/interfaces/mutex_intf.hpp>
 
-#include <CppUTest/TestHarness.h>
 #include <CppUTest/CommandLineTestRunner.h>
+#include <CppUTest/TestHarness.h>
 #include <CppUTestExt/MockSupport.h>
 #include <CppUTestExt/MockSupportPlugin.h>
 
@@ -39,7 +39,6 @@ TEST_GROUP( MutexSTLTests )
 
   void teardown() override
   {
-    // No teardown needed for now
     mock().checkExpectations();
     mock().clear();
   }

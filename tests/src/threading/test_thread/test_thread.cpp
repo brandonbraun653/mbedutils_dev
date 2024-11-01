@@ -19,9 +19,9 @@ Includes
 #include "thread_intf_expect.hpp"
 
 #include "test_thread_harness.hpp"
-#include "CppUMockGen.hpp"
-#include "CppUTestExt/MockSupport.h"
-#include "CppUTest/CommandLineTestRunner.h"
+#include <CppUMockGen.hpp>
+#include <CppUTestExt/MockSupport.h>
+#include <CppUTest/CommandLineTestRunner.h>
 
 /*-----------------------------------------------------------------------------
 Task implementation stub, since this particular test doesn't care about the

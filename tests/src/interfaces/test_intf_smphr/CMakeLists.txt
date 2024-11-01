@@ -1,0 +1,48 @@
+include(${MBEDUTILS_TEST_DIR}/test_target.cmake)
+create_test_target(
+    TARGET
+        Test_Interface_Smphr_STL
+    TEST_SOURCES
+        test_intf_smphr.cpp
+    INSTRUMENTED_SOURCES
+        ${PROJECT_SOURCE_DIR}/../lib/mbedutils_sim/smphr_stl.cpp
+    DEPENDENT_SOURCES
+        ${TESTING_COMMON_SOURCES}
+    INCLUDE_DIRS
+        ${TESTING_COMMON_INCLUDE_DIRS}
+    LIBRARIES
+        mbedutils_headers
+        mbedutils_internal_headers
+    EXPORT_DIR ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+create_test_target(
+    TARGET
+        Test_Interface_Smphr_FreeRTOS
+    TEST_SOURCES
+        test_intf_smphr.cpp
+    INSTRUMENTED_SOURCES
+        ${PROJECT_SOURCE_DIR}/../lib/mbedutils_freertos/freertos_smphr.cpp
+    DEPENDENT_SOURCES
+        ${MBEDUTILS_TEST_EXPECT_DIR}/assert_intf_expect.cpp
+        ${MBEDUTILS_TEST_EXPECT_DIR}/irq_intf_expect.cpp
+        ${MBEDUTILS_TEST_MOCK_DIR}/assert_intf_mock.cpp
+        ${MBEDUTILS_TEST_MOCK_DIR}/irq_intf_mock.cpp
+        ${PROJECT_SOURCE_DIR}/../lib/mbedutils_freertos/freertos_mutex.cpp
+        ${PROJECT_SOURCE_DIR}/../lib/mbedutils_freertos/freertos_thread.cpp
+        ${PROJECT_SOURCE_DIR}/../lib/mbedutils_freertos/freertos_time.cpp
+        ${PROJECT_SOURCE_DIR}/../mbedutils/src/core/assert.cpp
+        ${PROJECT_SOURCE_DIR}/../mbedutils/src/threading/message.cpp
+        ${PROJECT_SOURCE_DIR}/../mbedutils/src/threading/condition.cpp
+        ${PROJECT_SOURCE_DIR}/../mbedutils/src/threading/thread.cpp
+        ${TESTING_COMMON_SOURCES}
+    INCLUDE_DIRS
+        ${TESTING_COMMON_INCLUDE_DIRS}
+    DEFINES
+        -DMBEDUTILS_TEST_RUNTIME_FREERTOS
+    LIBRARIES
+        mbedutils_headers
+        mbedutils_internal_headers
+        mbedutils_test_lib_freertos
+    EXPORT_DIR ${CMAKE_CURRENT_BINARY_DIR}
+)

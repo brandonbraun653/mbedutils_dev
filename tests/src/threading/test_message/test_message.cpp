@@ -13,8 +13,8 @@ Includes
 -----------------------------------------------------------------------------*/
 #include <mbedutils/threading.hpp>
 
-#include "CppUTest/CommandLineTestRunner.h"
-#include "CppUTestExt/MockSupport.h"
+#include <CppUTest/CommandLineTestRunner.h>
+#include <CppUTestExt/MockSupport.h>
 
 using namespace mb::thread;
 

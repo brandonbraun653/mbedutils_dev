@@ -16,9 +16,9 @@ Includes
 #include <mutex_intf_expect.hpp>
 #include <smphr_intf_expect.hpp>
 
-#include "CppUMockGen.hpp"
-#include "CppUTest/CommandLineTestRunner.h"
-#include "CppUTestExt/MockSupport.h"
+#include <CppUMockGen.hpp>
+#include <CppUTest/CommandLineTestRunner.h>
+#include <CppUTestExt/MockSupport.h>
 #include "mbedutils/interfaces/mutex_intf.hpp"
 
 using namespace mb::thread;

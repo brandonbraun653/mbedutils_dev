@@ -15,8 +15,8 @@ Includes
 #include <mbedutils/drivers/memory/nvm/nor_flash.hpp>
 #include <mbedutils/drivers/memory/nvm/nor_flash_device.hpp>
 
-#include "CppUTest/CommandLineTestRunner.h"
-#include "CppUTest/TestHarness.h"
+#include <CppUTest/CommandLineTestRunner.h>
+#include <CppUTest/TestHarness.h>
 #include "gpio_intf_expect.hpp"
 #include "spi_intf_expect.hpp"
 #include "time_intf_expect.hpp"

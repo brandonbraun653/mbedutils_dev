@@ -9,6 +9,7 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/../lib/cpputest ${CMAKE_CURRENT_BINARY_DI
 
 # Include Dependent Headers
 set(TESTING_COMMON_INCLUDE_DIRS
+  ${PROJECT_SOURCE_DIR}/../
   ${PROJECT_SOURCE_DIR}/../mbedutils/include
   ${PROJECT_SOURCE_DIR}/../mbedutils/lib/cobs
   ${PROJECT_SOURCE_DIR}/../mbedutils/lib/nanopb
@@ -24,6 +25,7 @@ set(TESTING_COMMON_INCLUDE_DIRS
 
 # Common Sources for Testing
 set(TESTING_COMMON_SOURCES
+  ${PROJECT_SOURCE_DIR}/harness/test_runtime_harness.cpp
   ${PROJECT_SOURCE_DIR}/../mbedutils/src/core/nanoprintf.cpp
 )
 
@@ -41,8 +43,8 @@ add_subdirectory(src/threading/test_thread)
 add_subdirectory(src/database/test_key_value_db)
 add_subdirectory(src/database/test_key_value_db_mt)
 add_subdirectory(src/interfaces/test_intf_mutex)
-add_subdirectory(src/interfaces/sim/test_smphr_stl)
-add_subdirectory(src/interfaces/sim/test_thread_stl)
+add_subdirectory(src/interfaces/test_intf_smphr)
+add_subdirectory(src/interfaces/test_intf_thread)
 add_subdirectory(src/memory/nvm/test_nor_adesto)
 add_subdirectory(src/memory/nvm/test_nor_flash)
 
@@ -50,8 +52,9 @@ add_custom_target(BuildAllTests)
 add_dependencies(BuildAllTests
   Test_Interface_Mutex_STL
   Test_Interface_Mutex_FreeRTOS
-  TestIntfSmphrStl
-  TestIntfThreadStl
+  Test_Interface_Smphr_STL
+  Test_Interface_Smphr_FreeRTOS
+  Test_Interface_Thread_STL
   TestKeyValueDatabase
   TestKeyValueDatabaseMT
   TestNorAdesto

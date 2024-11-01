@@ -19,10 +19,10 @@ Includes
 #include <mbedutils/database.hpp>
 #include <mbedutils/drivers/memory/nvm/nor_flash.hpp>
 
-#include "CppUTest/TestHarness.h"
-#include "CppUTestExt/MockSupport.h"
+#include <CppUTest/TestHarness.h>
+#include <CppUTestExt/MockSupport.h>
 #include "CppUTestExt/MockSupportPlugin.h"
-#include "CppUTest/CommandLineTestRunner.h"
+#include <CppUTest/CommandLineTestRunner.h>
 
 #include "assert_expect.hpp"
 #include "atexit_expect.hpp"
