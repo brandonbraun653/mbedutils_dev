@@ -90,14 +90,15 @@ namespace TestHarness
     Task::Config thread_cfg;
     thread_cfg.reset();
 
-    thread_cfg.id         = 0;
-    thread_cfg.name       = "MainTestThread";
-    thread_cfg.priority   = 1;
-    thread_cfg.func       = _freertos_test_thread;
-    thread_cfg.user_data  = nullptr;
-    thread_cfg.affinity   = 0;
-    thread_cfg.stack_buf  = s_task_storage.stack;
-    thread_cfg.stack_size = sizeof( s_task_storage.stack ) / sizeof( s_task_storage.stack[ 0 ] );
+    thread_cfg.id             = 0;
+    thread_cfg.name           = "MainTestThread";
+    thread_cfg.priority       = 1;
+    thread_cfg.func           = _freertos_test_thread;
+    thread_cfg.user_data      = nullptr;
+    thread_cfg.affinity       = 0;
+    thread_cfg.stack_buf      = s_task_storage.stack;
+    thread_cfg.stack_size     = sizeof( s_task_storage.stack ) / sizeof( s_task_storage.stack[ 0 ] );
+    thread_cfg.block_on_start = false;
 
     mb::thread::create( thread_cfg );
 

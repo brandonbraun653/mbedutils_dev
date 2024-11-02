@@ -124,7 +124,7 @@ TEST( ConditionVariable_MultiThreading_Integration, notify_one )
   Wait for the thread to start, then check the state
   ---------------------------------------------------------------------------*/
   t1.start();
-  mb::thread::this_thread::sleep_for( 100 );
+  mb::thread::this_thread::sleep_for( 25 );
 
   CHECK( t1.joinable() );
   CHECK( test_event_count == 0 );
@@ -155,6 +155,7 @@ TEST( ConditionVariable_MultiThreading_Integration, notify_all )
   thread_cfg.stack_size = sizeof( task_storage_1.stack ) / sizeof( task_storage_1.stack[ 0 ] );
 
   Task t1 = mb::thread::create( thread_cfg );
+  t1.start();
 
   /* Thread 2 */
   thread_cfg.id         = 78;
@@ -163,6 +164,7 @@ TEST( ConditionVariable_MultiThreading_Integration, notify_all )
   thread_cfg.stack_size = sizeof( task_storage_2.stack ) / sizeof( task_storage_2.stack[ 0 ] );
 
   Task t2 = mb::thread::create( thread_cfg );
+  t2.start();
 
   /* Thread 3 */
   thread_cfg.id         = 79;
@@ -171,6 +173,12 @@ TEST( ConditionVariable_MultiThreading_Integration, notify_all )
   thread_cfg.stack_size = sizeof( task_storage_3.stack ) / sizeof( task_storage_3.stack[ 0 ] );
 
   Task t3 = mb::thread::create( thread_cfg );
+  t3.start();
+
+  /*---------------------------------------------------------------------------
+  Give threads enough time to start and wait on the condition variable
+  ---------------------------------------------------------------------------*/
+  mb::thread::this_thread::sleep_for( 25 );
 
   CHECK( t1.joinable() );
   CHECK( t2.joinable() );

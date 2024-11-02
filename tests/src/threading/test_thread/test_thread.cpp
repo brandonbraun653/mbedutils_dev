@@ -80,7 +80,7 @@ namespace mb::thread
   }
 
 
-  TaskHandle Task::implementation() const
+  TaskHandle Task::handle() const
   {
     return mHandle;
   }
@@ -248,10 +248,10 @@ TEST( thread_module, task_create_not_initialized )
   Try to create a task without initializing the module
   ---------------------------------------------------------------------------*/
   Task empty_task;
-  CHECK( empty_task.implementation() == 0 );
+  CHECK( empty_task.handle() == 0 );
 
   empty_task = mb::thread::create( cfg );
-  CHECK( empty_task.implementation() == 0 );
+  CHECK( empty_task.handle() == 0 );
 }
 
 TEST( thread_module, task_create_simple )
@@ -288,5 +288,5 @@ TEST( thread_module, task_create_simple )
   Call FUT
   ---------------------------------------------------------------------------*/
   Task new_task = mb::thread::create( cfg );
-  CHECK( new_task.implementation() );
+  CHECK( new_task.handle() );
 }

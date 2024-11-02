@@ -90,8 +90,8 @@ add_dependencies(BuildAllTests
   IntTest_Interface_Smphr_SIM
   IntTest_Interface_Thread_SIM
   IntTest_Thread_Condition_FreeRTOS
-  IntTest_Thread_Condition_STL
-  IntTest_Thread_Thread_STL
+  IntTest_Thread_Condition_SIM
+  IntTest_Thread_Thread_SIM
   UnitTest_Database_KeyValueDatabase
   UnitTest_Database_KeyValueDatabaseMT
   UnitTest_Memory_NVM_NorAdesto

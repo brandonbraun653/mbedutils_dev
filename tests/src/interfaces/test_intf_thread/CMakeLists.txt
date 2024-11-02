@@ -6,8 +6,14 @@ create_test_target(
         test_intf_thread.cpp
     INSTRUMENTED_SOURCES
         ${PROJECT_SOURCE_DIR}/../lib/mbedutils_sim/sim_thread.cpp
+    DEPENDENT_SOURCES
+        ${PROJECT_SOURCE_DIR}/../mbedutils/src/threading/condition.cpp
+        ${TST_CMN_DEP_SOURCES}
+        ${TST_INT_SOURCES_SIM}
     INCLUDE_DIRS
         ${TST_CMN_INC_DIRS}
+    DEFINES
+        -DINTEGRATION_TEST
     LIBRARIES
         mbedutils_headers
         mbedutils_internal_headers

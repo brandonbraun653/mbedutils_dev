@@ -30,7 +30,7 @@ include(${MBEDUTILS_TEST_DIR}/test_target.cmake)
 # STL Integration Test
 create_test_target(
     TARGET
-        IntTest_Thread_Condition_STL
+        IntTest_Thread_Condition_SIM
     TEST_SOURCES
         test_condition_integration.cpp
     INSTRUMENTED_SOURCES

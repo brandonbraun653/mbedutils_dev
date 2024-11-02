@@ -31,7 +31,7 @@ include(${MBEDUTILS_TEST_DIR}/test_target.cmake)
 
 create_test_target(
     TARGET
-        IntTest_Thread_Thread_STL
+        IntTest_Thread_Thread_SIM
     TEST_SOURCES
         test_thread_integration_stl.cpp
     INSTRUMENTED_SOURCES
