@@ -36,7 +36,18 @@ create_test_target(
     INSTRUMENTED_SOURCES
         ${PROJECT_SOURCE_DIR}/../mbedutils/src/threading/condition.cpp
     DEPENDENT_SOURCES
-        ${TST_INT_SOURCES_SIM}
+        ${MBEDUTILS_TEST_EXPECT_DIR}/assert_intf_expect.cpp
+        ${MBEDUTILS_TEST_EXPECT_DIR}/irq_intf_expect.cpp
+        ${MBEDUTILS_TEST_MOCK_DIR}/assert_intf_mock.cpp
+        ${MBEDUTILS_TEST_MOCK_DIR}/irq_intf_mock.cpp
+        ${PROJECT_SOURCE_DIR}/../lib/mbedutils_sim/sim_mutex.cpp
+        ${PROJECT_SOURCE_DIR}/../lib/mbedutils_sim/sim_smphr.cpp
+        ${PROJECT_SOURCE_DIR}/../lib/mbedutils_sim/sim_thread.cpp
+        ${PROJECT_SOURCE_DIR}/../lib/mbedutils_sim/sim_time.cpp
+        ${PROJECT_SOURCE_DIR}/../mbedutils/src/core/assert.cpp
+        ${PROJECT_SOURCE_DIR}/../mbedutils/src/threading/message.cpp
+        ${PROJECT_SOURCE_DIR}/../mbedutils/src/threading/thread.cpp
+        ${TST_CMN_DEP_SOURCES}
     INCLUDE_DIRS
         ${TST_CMN_INC_DIRS}
     DEFINES
@@ -56,7 +67,18 @@ create_test_target(
     INSTRUMENTED_SOURCES
         ${PROJECT_SOURCE_DIR}/../mbedutils/src/threading/condition.cpp
     DEPENDENT_SOURCES
-        ${TST_INT_SOURCES_FREERTOS}
+        ${MBEDUTILS_TEST_EXPECT_DIR}/assert_intf_expect.cpp
+        ${MBEDUTILS_TEST_EXPECT_DIR}/irq_intf_expect.cpp
+        ${MBEDUTILS_TEST_MOCK_DIR}/assert_intf_mock.cpp
+        ${MBEDUTILS_TEST_MOCK_DIR}/irq_intf_mock.cpp
+        ${PROJECT_SOURCE_DIR}/../lib/mbedutils_freertos/freertos_mutex.cpp
+        ${PROJECT_SOURCE_DIR}/../lib/mbedutils_freertos/freertos_smphr.cpp
+        ${PROJECT_SOURCE_DIR}/../lib/mbedutils_freertos/freertos_thread.cpp
+        ${PROJECT_SOURCE_DIR}/../lib/mbedutils_freertos/freertos_time.cpp
+        ${PROJECT_SOURCE_DIR}/../mbedutils/src/core/assert.cpp
+        ${PROJECT_SOURCE_DIR}/../mbedutils/src/threading/message.cpp
+        ${PROJECT_SOURCE_DIR}/../mbedutils/src/threading/thread.cpp
+        ${TST_CMN_DEP_SOURCES}
     INCLUDE_DIRS
         ${TST_CMN_INC_DIRS}
     DEFINES

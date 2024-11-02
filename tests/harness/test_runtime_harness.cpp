@@ -11,6 +11,7 @@
 /*-----------------------------------------------------------------------------
 Includes
 -----------------------------------------------------------------------------*/
+#include "mbedutils/drivers/threading/thread.hpp"
 #include <tests/harness/test_runtime_harness.hpp>
 
 #if defined( MBEDUTILS_TEST_RUNTIME_FREERTOS )
@@ -26,11 +27,11 @@ namespace TestHarness
   static mb::thread::Internal::ControlBlockStorage<32> s_control_blocks;
 
 #if defined( MBEDUTILS_TEST_RUNTIME_FREERTOS )
-  static int                                           s_argc          = 0;
-  static char                                        **s_argv          = nullptr;
-  static int                                           s_testResult    = 0;
-  static bool                                          s_testsComplete = false;
-  static mb::thread::Task::Storage<32 * 1024>          s_task_storage;
+  static int                                  s_argc          = 0;
+  static char                               **s_argv          = nullptr;
+  static int                                  s_testResult    = 0;
+  static bool                                 s_testsComplete = false;
+  static mb::thread::Task::Storage<32 * 1024> s_task_storage;
 #endif    // MBEDUTILS_TEST_RUNTIME_FREERTOS
 
   /*---------------------------------------------------------------------------
@@ -70,6 +71,7 @@ namespace TestHarness
   int runTests( int argc, char **argv )
   {
     using namespace mb::thread;
+    int result = -1;
 
     /*-------------------------------------------------------------------------
     Power up the thread driver
@@ -107,12 +109,21 @@ namespace TestHarness
     stopped somewhere in the test suite.
     -------------------------------------------------------------------------*/
     mb::thread::startScheduler();
-    return s_testResult;
+    result = s_testResult;
 #else
     /*-------------------------------------------------------------------------
     Directly call the CppUTest runner (STL Runtime based)
     -------------------------------------------------------------------------*/
-    return RUN_ALL_TESTS( argc, argv );
+    result = RUN_ALL_TESTS( argc, argv );
 #endif    // MBEDUTILS_TEST_RUNTIME_FREERTOS
+
+    /*-------------------------------------------------------------------------
+    Tear down the thread driver
+    -------------------------------------------------------------------------*/
+#if defined( INTEGRATION_TEST ) || defined( MBEDUTILS_TEST_RUNTIME_FREERTOS )
+    mb::thread::driver_teardown();
+#endif    // INTEGRATION_TEST || MBEDUTILS_TEST_RUNTIME_FREERTOS
+
+    return result;
   }
 }    // namespace TestHarness
