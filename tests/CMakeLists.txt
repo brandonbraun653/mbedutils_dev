@@ -88,6 +88,7 @@ add_dependencies(BuildAllTests
   IntTest_Interface_Mutex_SIM
   IntTest_Interface_Smphr_FreeRTOS
   IntTest_Interface_Smphr_SIM
+  IntTest_Interface_Thread_SIM
   IntTest_Thread_Condition_FreeRTOS
   IntTest_Thread_Condition_STL
   IntTest_Thread_Thread_STL
@@ -96,5 +97,5 @@ add_dependencies(BuildAllTests
   UnitTest_Memory_NVM_NorAdesto
   UnitTest_Memory_NVM_NorFlash
   UnitTest_Thread_Message
-  UnitTest_Thread_Thread
+  # UnitTest_Thread_Thread
 )

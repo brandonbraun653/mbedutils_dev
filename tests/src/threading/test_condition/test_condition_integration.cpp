@@ -137,46 +137,54 @@ TEST( ConditionVariable_MultiThreading_Integration, notify_one )
   CHECK( test_event_count == 1 );
 }
 
-// TEST( ConditionVariable_MultiThreading_Integration, notify_all )
-// {
-//   /*---------------------------------------------------------------------------
-//   Construct a thread that's waiting on the condition variable
-//   ---------------------------------------------------------------------------*/
-//   test_event_count = 0;
+TEST( ConditionVariable_MultiThreading_Integration, notify_all )
+{
+  /*---------------------------------------------------------------------------
+  Construct a thread that's waiting on the condition variable
+  ---------------------------------------------------------------------------*/
+  Task::Config thread_cfg;
+  thread_cfg.reset();
 
-//   std::thread t1( [ & ]() {
-//     test_cv.wait( test_mtx );
-//     test_event_count++;
-//     mb::osal::unlockMutex( test_mtx );
-//   } );
+  thread_cfg.id         = 77;
+  thread_cfg.name       = "TestThread1";
+  thread_cfg.priority   = 1;
+  thread_cfg.func       = condition_var_waiter_thread;
+  thread_cfg.user_data  = nullptr;
+  thread_cfg.affinity   = 0;
+  thread_cfg.stack_buf  = task_storage_1.stack;
+  thread_cfg.stack_size = sizeof( task_storage_1.stack ) / sizeof( task_storage_1.stack[ 0 ] );
 
-//   std::thread t2( [ & ]() {
-//     test_cv.wait( test_mtx );
-//     test_event_count++;
-//     mb::osal::unlockMutex( test_mtx );
-//   } );
+  Task t1 = mb::thread::create( thread_cfg );
 
-//   std::thread t3( [ & ]() {
-//     test_cv.wait( test_mtx );
-//     test_event_count++;
-//     mb::osal::unlockMutex( test_mtx );
-//   } );
+  /* Thread 2 */
+  thread_cfg.id         = 78;
+  thread_cfg.name       = "TestThread2";
+  thread_cfg.stack_buf  = task_storage_2.stack;
+  thread_cfg.stack_size = sizeof( task_storage_2.stack ) / sizeof( task_storage_2.stack[ 0 ] );
 
-//   std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
+  Task t2 = mb::thread::create( thread_cfg );
 
-//   CHECK( t1.joinable() );
-//   CHECK( t2.joinable() );
-//   CHECK( t3.joinable() );
-//   CHECK( test_event_count == 0 );
+  /* Thread 3 */
+  thread_cfg.id         = 79;
+  thread_cfg.name       = "TestThread3";
+  thread_cfg.stack_buf  = task_storage_3.stack;
+  thread_cfg.stack_size = sizeof( task_storage_3.stack ) / sizeof( task_storage_3.stack[ 0 ] );
 
-//   /*---------------------------------------------------------------------------
-//   Notify the waiting thread
-//   ---------------------------------------------------------------------------*/
-//   test_cv.notify_all();
+  Task t3 = mb::thread::create( thread_cfg );
 
-//   t1.join();
-//   t2.join();
-//   t3.join();
+  CHECK( t1.joinable() );
+  CHECK( t2.joinable() );
+  CHECK( t3.joinable() );
+  CHECK( test_event_count == 0 );
 
-//   CHECK( test_event_count == 3 );
-// }
+  /*---------------------------------------------------------------------------
+  Notify the waiting thread
+  ---------------------------------------------------------------------------*/
+  test_cv.notify_all();
+
+  t1.join();
+  t2.join();
+  t3.join();
+
+  CHECK( test_event_count == 3 );
+}

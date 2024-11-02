@@ -287,8 +287,6 @@ TEST( thread_module, task_create_simple )
   /*---------------------------------------------------------------------------
   Call FUT
   ---------------------------------------------------------------------------*/
-  Task new_task;
-  new_task = mb::thread::create( cfg );
-
+  Task new_task = mb::thread::create( cfg );
   CHECK( new_task.implementation() );
 }
