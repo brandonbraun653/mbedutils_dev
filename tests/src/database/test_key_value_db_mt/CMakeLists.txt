@@ -1,7 +1,7 @@
 include(${MBEDUTILS_TEST_DIR}/test_target.cmake)
 create_test_target(
     TARGET
-        TestKeyValueDatabaseMT
+        UnitTest_Database_KeyValueDatabaseMT
     TEST_SOURCES
         test_key_value_db_mt.cpp
     INSTRUMENTED_SOURCES
@@ -28,7 +28,7 @@ create_test_target(
         ${MBEDUTILS_TEST_MOCK_DIR}/nor_flash_mock.cpp
         ${MBEDUTILS_TEST_MOCK_DIR}/spi_intf_mock.cpp
         ${MBEDUTILS_TEST_MOCK_DIR}/time_intf_mock.cpp
-        ${PROJECT_SOURCE_DIR}/../lib/mbedutils_sim/mutex_stl.cpp
+        ${PROJECT_SOURCE_DIR}/../lib/mbedutils_sim/sim_mutex.cpp
         ${PROJECT_SOURCE_DIR}/../mbedutils/lib/flashdb/port/fal/src/fal.c
         ${PROJECT_SOURCE_DIR}/../mbedutils/lib/flashdb/port/fal/src/fal_flash.c
         ${PROJECT_SOURCE_DIR}/../mbedutils/lib/flashdb/port/fal/src/fal_partition.c
@@ -39,11 +39,11 @@ create_test_target(
         ${PROJECT_SOURCE_DIR}/../mbedutils/lib/nanopb/pb_common.c
         ${PROJECT_SOURCE_DIR}/../mbedutils/lib/nanopb/pb_decode.c
         ${PROJECT_SOURCE_DIR}/../mbedutils/lib/nanopb/pb_encode.c
-        ${TESTING_COMMON_SOURCES}
+        ${TST_CMN_DEP_SOURCES}
     INCLUDE_DIRS
         ./
         ./../test_key_value_db
-        ${TESTING_COMMON_INCLUDE_DIRS}
+        ${TST_CMN_INC_DIRS}
     LIBRARIES
         mbedutils_headers
         mbedutils_internal_headers

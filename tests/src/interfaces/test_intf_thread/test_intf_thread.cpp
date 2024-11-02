@@ -3,7 +3,9 @@
  *    test_intf_thread.cpp
  *
  *  Description:
- *    Tests the STL based thread implementation for Mbedutils
+ *    Tests the STL based thread implementation for Mbedutils. The FreeRTOS
+ *    implementation is quite difficult to test in a unit test environment and
+ *    we rely on the integration tests to validate that implementation.
  *
  *  2024 | Brandon Braun | brandonbraun653@protonmail.com
  *****************************************************************************/
@@ -22,6 +24,12 @@ Includes
 /*-----------------------------------------------------------------------------
 Tests
 -----------------------------------------------------------------------------*/
+
+int main( int argc, char **argv )
+{
+  MemoryLeakWarningPlugin::turnOffNewDeleteOverloads();
+  return RUN_ALL_TESTS( argc, argv );
+}
 
 /* clang-format off */
 TEST_GROUP(ThreadInterface)
@@ -124,10 +132,4 @@ TEST( ThreadInterface, OnTick )
   // Ensure no exception is thrown
   mb::thread::intf::on_tick();
   CHECK( true );
-}
-
-int main( int argc, char **argv )
-{
-  MemoryLeakWarningPlugin::turnOffNewDeleteOverloads();
-  return RUN_ALL_TESTS( argc, argv );
 }

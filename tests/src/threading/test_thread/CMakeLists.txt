@@ -1,7 +1,7 @@
 include(${MBEDUTILS_TEST_DIR}/test_target.cmake)
 create_test_target(
     TARGET
-        TestThreadingThread
+        UnitTest_Thread_Thread
     TEST_SOURCES
         test_thread.cpp
     INSTRUMENTED_SOURCES
@@ -19,10 +19,10 @@ create_test_target(
         ${MBEDUTILS_TEST_MOCK_DIR}/time_intf_mock.cpp
         ${PROJECT_SOURCE_DIR}/../mbedutils/src/threading/condition.cpp
         ${PROJECT_SOURCE_DIR}/../mbedutils/src/threading/message.cpp
-        ${TESTING_COMMON_SOURCES}
+        ${TST_CMN_DEP_SOURCES}
     INCLUDE_DIRS
         ./
-        ${TESTING_COMMON_INCLUDE_DIRS}
+        ${TST_CMN_INC_DIRS}
     LIBRARIES
         mbedutils_headers
         mbedutils_internal_headers
@@ -31,22 +31,24 @@ create_test_target(
 
 create_test_target(
     TARGET
-        TestThreadingThread_Integration_STL
+        IntTest_Thread_Thread_STL
     TEST_SOURCES
         test_thread_integration_stl.cpp
     INSTRUMENTED_SOURCES
         ${PROJECT_SOURCE_DIR}/../mbedutils/src/threading/thread.cpp
-        ${PROJECT_SOURCE_DIR}/../lib/mbedutils_sim/thread_stl.cpp
+        ${PROJECT_SOURCE_DIR}/../lib/mbedutils_sim/sim_thread.cpp
     DEPENDENT_SOURCES
         ${MBEDUTILS_TEST_FAKE_DIR}/assert_fake.cpp
-        ${PROJECT_SOURCE_DIR}/../lib/mbedutils_sim/mutex_stl.cpp
-        ${PROJECT_SOURCE_DIR}/../lib/mbedutils_sim/smphr_stl.cpp
-        ${PROJECT_SOURCE_DIR}/../lib/mbedutils_sim/time_stl.cpp
+        ${PROJECT_SOURCE_DIR}/../lib/mbedutils_sim/sim_mutex.cpp
+        ${PROJECT_SOURCE_DIR}/../lib/mbedutils_sim/sim_smphr.cpp
+        ${PROJECT_SOURCE_DIR}/../lib/mbedutils_sim/sim_time.cpp
         ${PROJECT_SOURCE_DIR}/../mbedutils/src/threading/condition.cpp
         ${PROJECT_SOURCE_DIR}/../mbedutils/src/threading/message.cpp
-        ${TESTING_COMMON_SOURCES}
+        ${TST_CMN_DEP_SOURCES}
     INCLUDE_DIRS
-        ${TESTING_COMMON_INCLUDE_DIRS}
+        ${TST_CMN_INC_DIRS}
+    DEFINES
+        -DINTEGRATION_TEST
     LIBRARIES
         mbedutils_headers
         mbedutils_internal_headers

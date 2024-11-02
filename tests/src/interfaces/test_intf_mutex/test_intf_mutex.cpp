@@ -1,6 +1,6 @@
 /******************************************************************************
  *  File Name:
- *    test_mutex_stl.cpp
+ *    test_sim_mutex.cpp
  *
  *  Description:
  *    Tests the STL based mutex implementation for Mbedutils
@@ -13,6 +13,7 @@ Includes
 -----------------------------------------------------------------------------*/
 #include <mbedutils/interfaces/mutex_intf.hpp>
 
+#include <tests/harness/test_runtime_harness.hpp>
 #include <CppUTest/CommandLineTestRunner.h>
 #include <CppUTest/TestHarness.h>
 #include <CppUTestExt/MockSupport.h>
@@ -25,7 +26,7 @@ Tests
 int main( int argc, char **argv )
 {
   MemoryLeakWarningPlugin::turnOffNewDeleteOverloads();
-  return RUN_ALL_TESTS( argc, argv );
+  return TestHarness::runTests( argc, argv );
 }
 
 /* clang-format off */

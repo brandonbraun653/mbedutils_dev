@@ -1,6 +1,6 @@
 /******************************************************************************
  *  File Name:
- *    test_smphr_stl.cpp
+ *    test_sim_smphr.cpp
  *
  *  Description:
  *    Tests the STL based semaphore implementation for Mbedutils

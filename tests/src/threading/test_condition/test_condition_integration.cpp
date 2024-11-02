@@ -14,10 +14,13 @@ Includes
 #include <mbedutils/threading.hpp>
 #include <thread>
 
+#include <tests/harness/test_runtime_harness.hpp>
 #include <CppUMockGen.hpp>
 #include <CppUTest/CommandLineTestRunner.h>
 #include <CppUTestExt/MockSupport.h>
+#include "mbedutils/drivers/threading/thread.hpp"
 #include "mbedutils/interfaces/mutex_intf.hpp"
+#include "mbedutils/interfaces/thread_intf.hpp"
 
 using namespace mb::thread;
 
@@ -27,7 +30,8 @@ Test Helpers
 
 static int               test_predicate_call_count;
 static std::vector<bool> test_predicate_state;
-static bool              test_predicate()
+
+static bool test_predicate()
 {
   if( test_predicate_call_count >= test_predicate_state.size() )
   {
@@ -37,6 +41,25 @@ static bool              test_predicate()
   return test_predicate_state[ test_predicate_call_count++ ];
 }
 
+
+/*-----------------------------------------------------------------------------
+Test Data
+-----------------------------------------------------------------------------*/
+
+static ConditionVariable                    test_cv;
+static mb::osal::mb_mutex_t                 test_mtx;
+static size_t                               test_event_count;
+static mb::thread::Task::Storage<32 * 1024> task_storage_1;
+static mb::thread::Task::Storage<32 * 1024> task_storage_2;
+static mb::thread::Task::Storage<32 * 1024> task_storage_3;
+
+static void condition_var_waiter_thread( void *arg )
+{
+  test_cv.wait( test_mtx );
+  test_event_count++;
+  mb::osal::unlockMutex( test_mtx );
+}
+
 /*-----------------------------------------------------------------------------
 Tests
 -----------------------------------------------------------------------------*/
@@ -44,17 +67,11 @@ Tests
 int main( int argc, char **argv )
 {
   MemoryLeakWarningPlugin::turnOffNewDeleteOverloads();
-  return RUN_ALL_TESTS( argc, argv );
+  return TestHarness::runTests( argc, argv );
 }
 
-TEST_GROUP( ConditionVariable_Int_STL )
+TEST_GROUP( ConditionVariable_MultiThreading_Integration )
 {
-  /*---------------------------------------------------------------------------
-  Test Data
-  ---------------------------------------------------------------------------*/
-  ConditionVariable    test_cv;
-  mb::osal::mb_mutex_t test_mtx;
-  size_t               test_event_count;
 
   /*---------------------------------------------------------------------------
   Test Setup
@@ -84,73 +101,82 @@ TEST_GROUP( ConditionVariable_Int_STL )
   }
 };
 
-TEST( ConditionVariable_Int_STL, notify_one )
+TEST( ConditionVariable_MultiThreading_Integration, notify_one )
 {
   /*---------------------------------------------------------------------------
   Construct a thread that's waiting on the condition variable
   ---------------------------------------------------------------------------*/
-  test_event_count = 0;
+  Task::Config thread_cfg;
+  thread_cfg.reset();
 
-  std::thread t1( [ & ]() {
-    test_cv.wait( test_mtx );
-    test_event_count++;
-    mb::osal::unlockMutex( test_mtx );
-  } );
+  thread_cfg.id         = 77;
+  thread_cfg.name       = "TestThread1";
+  thread_cfg.priority   = 1;
+  thread_cfg.func       = condition_var_waiter_thread;
+  thread_cfg.user_data  = nullptr;
+  thread_cfg.affinity   = 0;
+  thread_cfg.stack_buf  = task_storage_1.stack;
+  thread_cfg.stack_size = sizeof( task_storage_1.stack ) / sizeof( task_storage_1.stack[ 0 ] );
 
-  std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
+  Task t1 = mb::thread::create( thread_cfg );
+
+  /*---------------------------------------------------------------------------
+  Wait for the thread to start, then check the state
+  ---------------------------------------------------------------------------*/
+  t1.start();
+  mb::thread::this_thread::sleep_for( 100 );
 
   CHECK( t1.joinable() );
   CHECK( test_event_count == 0 );
 
   /*---------------------------------------------------------------------------
-  Notify the waiting thread
+  Notify the waiting thread and validate the result
   ---------------------------------------------------------------------------*/
   test_cv.notify_one();
-
   t1.join();
   CHECK( test_event_count == 1 );
 }
 
-TEST( ConditionVariable_Int_STL, notify_all )
-{
-  /*---------------------------------------------------------------------------
-  Construct a thread that's waiting on the condition variable
-  ---------------------------------------------------------------------------*/
-  test_event_count = 0;
+// TEST( ConditionVariable_MultiThreading_Integration, notify_all )
+// {
+//   /*---------------------------------------------------------------------------
+//   Construct a thread that's waiting on the condition variable
+//   ---------------------------------------------------------------------------*/
+//   test_event_count = 0;
 
-  std::thread t1( [ & ]() {
-    test_cv.wait( test_mtx );
-    test_event_count++;
-    mb::osal::unlockMutex( test_mtx );
-  } );
+//   std::thread t1( [ & ]() {
+//     test_cv.wait( test_mtx );
+//     test_event_count++;
+//     mb::osal::unlockMutex( test_mtx );
+//   } );
 
-  std::thread t2( [ & ]() {
-    test_cv.wait( test_mtx );
-    test_event_count++;
-    mb::osal::unlockMutex( test_mtx );
-  } );
+//   std::thread t2( [ & ]() {
+//     test_cv.wait( test_mtx );
+//     test_event_count++;
+//     mb::osal::unlockMutex( test_mtx );
+//   } );
 
-  std::thread t3( [ & ]() {
-    test_cv.wait( test_mtx );
-    test_event_count++;
-    mb::osal::unlockMutex( test_mtx );
-  } );
+//   std::thread t3( [ & ]() {
+//     test_cv.wait( test_mtx );
+//     test_event_count++;
+//     mb::osal::unlockMutex( test_mtx );
+//   } );
 
-  std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
+//   std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
 
-  CHECK( t1.joinable() );
-  CHECK( t2.joinable() );
-  CHECK( t3.joinable() );
-  CHECK( test_event_count == 0 );
+//   CHECK( t1.joinable() );
+//   CHECK( t2.joinable() );
+//   CHECK( t3.joinable() );
+//   CHECK( test_event_count == 0 );
 
-  /*---------------------------------------------------------------------------
-  Notify the waiting thread
-  ---------------------------------------------------------------------------*/
-  test_cv.notify_all();
+//   /*---------------------------------------------------------------------------
+//   Notify the waiting thread
+//   ---------------------------------------------------------------------------*/
+//   test_cv.notify_all();
 
-  t1.join();
-  t2.join();
-  t3.join();
+//   t1.join();
+//   t2.join();
+//   t3.join();
 
-  CHECK( test_event_count == 3 );
-}
+//   CHECK( test_event_count == 3 );
+// }

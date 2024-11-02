@@ -282,7 +282,7 @@ TEST( thread_module, task_create_simple )
   cfg.id = 1;
 
   uint32_t pretend_task_handle = 0x1234;
-  expect::mb$::thread$::intf$::create_task( IgnoreParameter(), reinterpret_cast<TaskHandle>( &pretend_task_handle ) );
+  expect::mb$::thread$::intf$::create_task( cfg, reinterpret_cast<TaskHandle>( &pretend_task_handle ) );
 
   /*---------------------------------------------------------------------------
   Call FUT

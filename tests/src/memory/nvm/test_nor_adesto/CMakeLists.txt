@@ -1,7 +1,7 @@
 include(${MBEDUTILS_TEST_DIR}/test_target.cmake)
 create_test_target(
     TARGET
-        TestNorAdesto
+        UnitTest_Memory_NVM_NorAdesto
     TEST_SOURCES
         test_nor_adesto.cpp
     INSTRUMENTED_SOURCES
@@ -15,7 +15,7 @@ create_test_target(
         ${MBEDUTILS_TEST_MOCK_DIR}/spi_intf_mock.cpp
         ${MBEDUTILS_TEST_MOCK_DIR}/time_intf_mock.cpp
     INCLUDE_DIRS
-        ${TESTING_COMMON_INCLUDE_DIRS}
+        ${TST_CMN_INC_DIRS}
     LIBRARIES
         mbedutils_headers
         mbedutils_internal_headers

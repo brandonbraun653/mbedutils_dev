@@ -23,14 +23,14 @@ namespace TestHarness
   /*---------------------------------------------------------------------------
   Private Data
   ---------------------------------------------------------------------------*/
+  static mb::thread::Internal::ControlBlockStorage<32> s_control_blocks;
 
 #if defined( MBEDUTILS_TEST_RUNTIME_FREERTOS )
   static int                                           s_argc          = 0;
   static char                                        **s_argv          = nullptr;
   static int                                           s_testResult    = 0;
   static bool                                          s_testsComplete = false;
-  static mb::thread::Internal::ControlBlockStorage<32> control_blocks;
-  static mb::thread::Task::Storage<32 * 1024>          task_storage;
+  static mb::thread::Task::Storage<32 * 1024>          s_task_storage;
 #endif    // MBEDUTILS_TEST_RUNTIME_FREERTOS
 
   /*---------------------------------------------------------------------------
@@ -69,17 +69,20 @@ namespace TestHarness
 
   int runTests( int argc, char **argv )
   {
-#if defined( MBEDUTILS_TEST_RUNTIME_FREERTOS )
     using namespace mb::thread;
-    s_argc = argc;
-    s_argv = argv;
 
     /*-------------------------------------------------------------------------
     Power up the thread driver
     -------------------------------------------------------------------------*/
+#if defined( INTEGRATION_TEST ) || defined( MBEDUTILS_TEST_RUNTIME_FREERTOS )
     Internal::ModuleConfig cfg;
-    cfg.tsk_control_blocks = &control_blocks;
+    cfg.tsk_control_blocks = &s_control_blocks;
     mb::thread::driver_setup( cfg );
+#endif    // INTEGRATION_TEST || MBEDUTILS_TEST_RUNTIME_FREERTOS
+
+#if defined( MBEDUTILS_TEST_RUNTIME_FREERTOS )
+    s_argc = argc;
+    s_argv = argv;
 
     /*-------------------------------------------------------------------------
     Construct the thread
@@ -87,14 +90,14 @@ namespace TestHarness
     Task::Config thread_cfg;
     thread_cfg.reset();
 
-    thread_cfg.id         = 1;
-    thread_cfg.name       = "TestThread";
+    thread_cfg.id         = 0;
+    thread_cfg.name       = "MainTestThread";
     thread_cfg.priority   = 1;
     thread_cfg.func       = _freertos_test_thread;
     thread_cfg.user_data  = nullptr;
     thread_cfg.affinity   = 0;
-    thread_cfg.stack_buf  = task_storage.stack;
-    thread_cfg.stack_size = sizeof( task_storage.stack ) / sizeof( task_storage.stack[ 0 ] );
+    thread_cfg.stack_buf  = s_task_storage.stack;
+    thread_cfg.stack_size = sizeof( s_task_storage.stack ) / sizeof( s_task_storage.stack[ 0 ] );
 
     mb::thread::create( thread_cfg );
 

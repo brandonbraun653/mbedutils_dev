@@ -8,7 +8,7 @@ endif()
 add_subdirectory(${PROJECT_SOURCE_DIR}/../lib/cpputest ${CMAKE_CURRENT_BINARY_DIR}/cpputest)
 
 # Include Dependent Headers
-set(TESTING_COMMON_INCLUDE_DIRS
+set(TST_CMN_INC_DIRS
   ${PROJECT_SOURCE_DIR}/../
   ${PROJECT_SOURCE_DIR}/../mbedutils/include
   ${PROJECT_SOURCE_DIR}/../mbedutils/lib/cobs
@@ -23,10 +23,44 @@ set(TESTING_COMMON_INCLUDE_DIRS
   ${MBEDUTILS_TEST_MOCK_DIR}
 )
 
-# Common Sources for Testing
-set(TESTING_COMMON_SOURCES
+# Common Dependent Sources for Testing. These are meant to be included in all tests and
+# should not contain any runtime specific code or code which could be tested in other
+# tests.
+set(TST_CMN_DEP_SOURCES
   ${PROJECT_SOURCE_DIR}/harness/test_runtime_harness.cpp
   ${PROJECT_SOURCE_DIR}/../mbedutils/src/core/nanoprintf.cpp
+)
+
+# Integration Test Sources for Simulator runtime
+set(TST_INT_SOURCES_SIM
+  ${MBEDUTILS_TEST_EXPECT_DIR}/assert_intf_expect.cpp
+  ${MBEDUTILS_TEST_EXPECT_DIR}/irq_intf_expect.cpp
+  ${MBEDUTILS_TEST_MOCK_DIR}/assert_intf_mock.cpp
+  ${MBEDUTILS_TEST_MOCK_DIR}/irq_intf_mock.cpp
+  ${PROJECT_SOURCE_DIR}/../lib/mbedutils_sim/sim_mutex.cpp
+  ${PROJECT_SOURCE_DIR}/../lib/mbedutils_sim/sim_smphr.cpp
+  ${PROJECT_SOURCE_DIR}/../lib/mbedutils_sim/sim_thread.cpp
+  ${PROJECT_SOURCE_DIR}/../lib/mbedutils_sim/sim_time.cpp
+  ${PROJECT_SOURCE_DIR}/../mbedutils/src/core/assert.cpp
+  ${PROJECT_SOURCE_DIR}/../mbedutils/src/threading/message.cpp
+  ${PROJECT_SOURCE_DIR}/../mbedutils/src/threading/thread.cpp
+  ${TST_CMN_DEP_SOURCES}
+)
+
+# Integration Test Sources for FreeRTOS runtime
+set(TST_INT_SOURCES_FREERTOS
+  ${MBEDUTILS_TEST_EXPECT_DIR}/assert_intf_expect.cpp
+  ${MBEDUTILS_TEST_EXPECT_DIR}/irq_intf_expect.cpp
+  ${MBEDUTILS_TEST_MOCK_DIR}/assert_intf_mock.cpp
+  ${MBEDUTILS_TEST_MOCK_DIR}/irq_intf_mock.cpp
+  ${PROJECT_SOURCE_DIR}/../lib/mbedutils_freertos/freertos_mutex.cpp
+  ${PROJECT_SOURCE_DIR}/../lib/mbedutils_freertos/freertos_smphr.cpp
+  ${PROJECT_SOURCE_DIR}/../lib/mbedutils_freertos/freertos_thread.cpp
+  ${PROJECT_SOURCE_DIR}/../lib/mbedutils_freertos/freertos_time.cpp
+  ${PROJECT_SOURCE_DIR}/../mbedutils/src/core/assert.cpp
+  ${PROJECT_SOURCE_DIR}/../mbedutils/src/threading/message.cpp
+  ${PROJECT_SOURCE_DIR}/../mbedutils/src/threading/thread.cpp
+  ${TST_CMN_DEP_SOURCES}
 )
 
 # Modify the mbedutils headers to target to include the etl library. It's not packaged
@@ -50,18 +84,17 @@ add_subdirectory(src/memory/nvm/test_nor_flash)
 
 add_custom_target(BuildAllTests)
 add_dependencies(BuildAllTests
-  Test_Interface_Mutex_STL
-  Test_Interface_Mutex_FreeRTOS
-  Test_Interface_Smphr_STL
-  Test_Interface_Smphr_FreeRTOS
-  Test_Interface_Thread_STL
-  TestKeyValueDatabase
-  TestKeyValueDatabaseMT
-  TestNorAdesto
-  TestNorFlash
-  TestThreadingCondition
-  TestThreadingCondition_Integration_STL
-  TestThreadingMessage
-  TestThreadingThread
-  TestThreadingThread_Integration_STL
+  IntTest_Interface_Mutex_FreeRTOS
+  IntTest_Interface_Mutex_SIM
+  IntTest_Interface_Smphr_FreeRTOS
+  IntTest_Interface_Smphr_SIM
+  IntTest_Thread_Condition_FreeRTOS
+  IntTest_Thread_Condition_STL
+  IntTest_Thread_Thread_STL
+  UnitTest_Database_KeyValueDatabase
+  UnitTest_Database_KeyValueDatabaseMT
+  UnitTest_Memory_NVM_NorAdesto
+  UnitTest_Memory_NVM_NorFlash
+  UnitTest_Thread_Message
+  UnitTest_Thread_Thread
 )

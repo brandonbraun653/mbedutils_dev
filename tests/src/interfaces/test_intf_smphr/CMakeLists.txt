@@ -1,15 +1,15 @@
 include(${MBEDUTILS_TEST_DIR}/test_target.cmake)
 create_test_target(
     TARGET
-        Test_Interface_Smphr_STL
+        IntTest_Interface_Smphr_SIM
     TEST_SOURCES
         test_intf_smphr.cpp
     INSTRUMENTED_SOURCES
-        ${PROJECT_SOURCE_DIR}/../lib/mbedutils_sim/smphr_stl.cpp
+        ${PROJECT_SOURCE_DIR}/../lib/mbedutils_sim/sim_smphr.cpp
     DEPENDENT_SOURCES
-        ${TESTING_COMMON_SOURCES}
+        ${TST_CMN_DEP_SOURCES}
     INCLUDE_DIRS
-        ${TESTING_COMMON_INCLUDE_DIRS}
+        ${TST_CMN_INC_DIRS}
     LIBRARIES
         mbedutils_headers
         mbedutils_internal_headers
@@ -18,7 +18,7 @@ create_test_target(
 
 create_test_target(
     TARGET
-        Test_Interface_Smphr_FreeRTOS
+        IntTest_Interface_Smphr_FreeRTOS
     TEST_SOURCES
         test_intf_smphr.cpp
     INSTRUMENTED_SOURCES
@@ -35,9 +35,9 @@ create_test_target(
         ${PROJECT_SOURCE_DIR}/../mbedutils/src/threading/message.cpp
         ${PROJECT_SOURCE_DIR}/../mbedutils/src/threading/condition.cpp
         ${PROJECT_SOURCE_DIR}/../mbedutils/src/threading/thread.cpp
-        ${TESTING_COMMON_SOURCES}
+        ${TST_CMN_DEP_SOURCES}
     INCLUDE_DIRS
-        ${TESTING_COMMON_INCLUDE_DIRS}
+        ${TST_CMN_INC_DIRS}
     DEFINES
         -DMBEDUTILS_TEST_RUNTIME_FREERTOS
     LIBRARIES
