@@ -79,12 +79,6 @@ namespace mb::thread
     return mName;
   }
 
-
-  TaskHandle Task::handle() const
-  {
-    return mHandle;
-  }
-
   namespace this_thread
   {
     void yield()
@@ -282,11 +276,12 @@ TEST( thread_module, task_create_simple )
   cfg.id = 1;
 
   uint32_t pretend_task_handle = 0x1234;
-  expect::mb$::thread$::intf$::create_task( cfg, reinterpret_cast<TaskHandle>( &pretend_task_handle ) );
+  expect::mb$::thread$::intf$::create_task( cfg, reinterpret_cast<TaskId>( &cfg.id ) );
 
   /*---------------------------------------------------------------------------
   Call FUT
   ---------------------------------------------------------------------------*/
   Task new_task = mb::thread::create( cfg );
-  CHECK( new_task.handle() );
+  CHECK( new_task.id() != TASK_ID_INVALID );
+
 }
