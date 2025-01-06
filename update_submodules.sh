@@ -17,3 +17,11 @@ git submodule update --init --recursive
 echo "Updating Mbedutils"
 cd $PRJ_ROOT/mbedutils
 git submodule update --init
+
+echo "Updating Mbedutils Sim"
+cd $PRJ_ROOT/lib/mbedutils_sim
+git submodule update --init
+
+echo "Updating Mbedutils Test"
+cd $PRJ_ROOT/lib/mbedutils_test
+git submodule update --init

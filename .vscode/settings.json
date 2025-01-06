@@ -83,5 +83,7 @@
     "clangd.arguments": ["-log=verbose",
                          "-pretty",
                          "--background-index",
-                         "--compile-commands-dir=${workspaceFolder}/build/host/debug"],
+                        "--compile-commands-dir=${workspaceFolder}/build/host/debug"
+                    ],
+                    "editor.tabSize": 4,
 }
