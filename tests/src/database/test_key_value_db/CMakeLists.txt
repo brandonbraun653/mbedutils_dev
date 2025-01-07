@@ -44,7 +44,6 @@ create_test_target(
         ./
         ${TST_CMN_INC_DIRS}
     LIBRARIES
-        mbedutils_lib_stl
         mbedutils_headers
         mbedutils_internal_headers
     EXPORT_DIR ${CMAKE_CURRENT_BINARY_DIR}

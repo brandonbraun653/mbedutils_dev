@@ -6,15 +6,6 @@ set(CMAKE_C_COMPILER_WORKS)
 set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")
 
 project(MbedutilsDevelopment C CXX)
-enable_testing()
-
-add_subdirectory(lib/etl)
-add_subdirectory(lib/mbedutils_freertos)
-add_subdirectory(lib/mbedutils_pico)
-add_subdirectory(lib/mbedutils_sim)
-add_subdirectory(lib/mbedutils_test)
-add_subdirectory(mbedutils)
-add_subdirectory(tests)
 
 # Add a custom target for generating coverage reports
 find_program(LCOV_PATH lcov)
@@ -37,3 +28,15 @@ add_custom_target(UnitTests
   COMMAND echo "JUnit test results generated at ${ARCHIVE_OUTPUT_DIR}/junit_results.xml"
   WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
 )
+
+# Add testing dependencies
+add_subdirectory(lib/etl)
+add_subdirectory(lib/mbedutils_freertos)
+add_subdirectory(lib/mbedutils_pico)
+add_subdirectory(lib/mbedutils_sim)
+add_subdirectory(lib/mbedutils_test)
+add_subdirectory(mbedutils)
+
+# Add tests
+enable_testing()
+add_subdirectory(tests)

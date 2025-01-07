@@ -45,6 +45,7 @@ create_test_target(
         ${PROJECT_SOURCE_DIR}/../lib/mbedutils_sim/sim_thread.cpp
         ${PROJECT_SOURCE_DIR}/../lib/mbedutils_sim/sim_time.cpp
         ${PROJECT_SOURCE_DIR}/../mbedutils/src/core/assert.cpp
+        ${PROJECT_SOURCE_DIR}/../mbedutils/src/core/string.cpp
         ${PROJECT_SOURCE_DIR}/../mbedutils/src/threading/message.cpp
         ${PROJECT_SOURCE_DIR}/../mbedutils/src/threading/thread.cpp
         ${TST_CMN_DEP_SOURCES}
@@ -76,6 +77,7 @@ create_test_target(
         ${PROJECT_SOURCE_DIR}/../lib/mbedutils_freertos/freertos_thread.cpp
         ${PROJECT_SOURCE_DIR}/../lib/mbedutils_freertos/freertos_time.cpp
         ${PROJECT_SOURCE_DIR}/../mbedutils/src/core/assert.cpp
+        ${PROJECT_SOURCE_DIR}/../mbedutils/src/core/string.cpp
         ${PROJECT_SOURCE_DIR}/../mbedutils/src/threading/message.cpp
         ${PROJECT_SOURCE_DIR}/../mbedutils/src/threading/thread.cpp
         ${TST_CMN_DEP_SOURCES}
