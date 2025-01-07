@@ -113,7 +113,7 @@ TEST_GROUP( tsdb_sink )
   }
 };
 
-TEST( tsdb_sink, call_configure_with_invalid_arguments )
+TEST( tsdb_sink, configure_with_invalid_arguments )
 {
   test_sink = new mb::logging::TSDBSink();
   CHECK( test_sink != nullptr );
@@ -156,7 +156,7 @@ TEST( tsdb_sink, call_configure_with_invalid_arguments )
   delete test_sink;
 }
 
-TEST( tsdb_sink, call_configure_with_valid_arguments )
+TEST( tsdb_sink, configure_with_valid_arguments )
 {
   test_sink = new mb::logging::TSDBSink();
   CHECK( test_sink != nullptr );
@@ -173,6 +173,33 @@ TEST( tsdb_sink, call_configure_with_valid_arguments )
 
   test_sink->configure( config );
   CHECK( test_sink->open() == mb::logging::ErrCode::ERR_OK );
+
+  delete test_sink;
+}
+
+TEST( tsdb_sink, close )
+{
+  test_sink = new mb::logging::TSDBSink();
+  CHECK( test_sink != nullptr );
+
+  mb::logging::TSDBSink::Config config;
+
+  /*---------------------------------------------------------------------------
+  Test Case: Close before configuration
+  ---------------------------------------------------------------------------*/
+  CHECK( test_sink->close() == mb::logging::ErrCode::ERR_OK );
+
+  /*---------------------------------------------------------------------------
+  Test Case: Close after valid configuration
+  ---------------------------------------------------------------------------*/
+  config.dev_name      = "nor_flash_0";
+  config.part_name     = "logging";
+  config.max_log_size  = 256;
+  config.reader_buffer = nullptr;
+
+  test_sink->configure( config );
+  CHECK( test_sink->open() == mb::logging::ErrCode::ERR_OK );
+  CHECK( test_sink->close() == mb::logging::ErrCode::ERR_OK );
 
   delete test_sink;
 }
