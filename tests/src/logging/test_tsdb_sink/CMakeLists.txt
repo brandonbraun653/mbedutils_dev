@@ -1,16 +1,12 @@
 include(${MBEDUTILS_TEST_DIR}/test_target.cmake)
 create_test_target(
     TARGET
-        UnitTest_Database_KeyValueDatabase
+        UnitTest_Logging_TSDBSink
     TEST_SOURCES
-        test_key_value_db.cpp
+        test_logging_sink_tsdb.cpp
     INSTRUMENTED_SOURCES
-        ${PROJECT_SOURCE_DIR}/../mbedutils/src/database/db_kv_node.cpp
-        ${PROJECT_SOURCE_DIR}/../mbedutils/src/database/db_kv_nvm.cpp
-        ${PROJECT_SOURCE_DIR}/../mbedutils/src/database/db_kv_ram.cpp
-        ${PROJECT_SOURCE_DIR}/../mbedutils/src/database/db_kv_util.cpp
+        ${PROJECT_SOURCE_DIR}/../mbedutils/src/logging/logging_sink_tsdb.cpp
     DEPENDENT_SOURCES
-        ${CMAKE_CURRENT_SOURCE_DIR}/test_kv_db.pb.c
         ${MBEDUTILS_TEST_EXPECT_DIR}/assert_intf_expect.cpp
         ${MBEDUTILS_TEST_EXPECT_DIR}/atexit_expect.cpp
         ${MBEDUTILS_TEST_EXPECT_DIR}/gpio_intf_expect.cpp

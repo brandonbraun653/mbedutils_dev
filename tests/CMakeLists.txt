@@ -73,16 +73,17 @@ target_include_directories(mbedutils_headers
 )
 
 add_subdirectory(harness/freertos)
-add_subdirectory(src/threading/test_condition)
-add_subdirectory(src/threading/test_message)
-add_subdirectory(src/threading/test_thread)
 add_subdirectory(src/database/test_key_value_db)
 add_subdirectory(src/database/test_key_value_db_mt)
 add_subdirectory(src/interfaces/test_intf_mutex)
 add_subdirectory(src/interfaces/test_intf_smphr)
 add_subdirectory(src/interfaces/test_intf_thread)
+add_subdirectory(src/logging/test_tsdb_sink)
 add_subdirectory(src/memory/nvm/test_nor_adesto)
 add_subdirectory(src/memory/nvm/test_nor_flash)
+add_subdirectory(src/threading/test_condition)
+add_subdirectory(src/threading/test_message)
+add_subdirectory(src/threading/test_thread)
 
 add_custom_target(BuildAllTests)
 add_dependencies(BuildAllTests
@@ -97,6 +98,7 @@ add_dependencies(BuildAllTests
   IntTest_Thread_Thread_SIM
   UnitTest_Database_KeyValueDatabase
   UnitTest_Database_KeyValueDatabaseMT
+  UnitTest_Logging_TSDBSink
   UnitTest_Memory_NVM_NorAdesto
   UnitTest_Memory_NVM_NorFlash
   UnitTest_Thread_Message
