@@ -25,6 +25,7 @@ Using Key-Value Database feature
 Using Time-Series Database feature
 -----------------------------------------------------------------------------*/
 #define FDB_USING_TSDB
+#define FDB_USING_TIMESTAMP_64BIT
 
 /*-----------------------------------------------------------------------------
 Using flash abstraction layer
