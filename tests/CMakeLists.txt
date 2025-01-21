@@ -29,6 +29,7 @@ set(TST_CMN_INC_DIRS
 set(TST_CMN_DEP_SOURCES
   ${PROJECT_SOURCE_DIR}/harness/test_runtime_harness.cpp
   ${PROJECT_SOURCE_DIR}/../mbedutils/src/core/nanoprintf.cpp
+  ${PROJECT_SOURCE_DIR}/../mbedutils/src/system/system_intf.cpp
 )
 
 # Integration Test Sources for Simulator runtime

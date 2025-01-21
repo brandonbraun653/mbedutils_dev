@@ -20,8 +20,10 @@ Includes
 #include <CppUTestExt/MockSupport.h>
 #include <CppUTest/CommandLineTestRunner.h>
 
+#include "CppUMockGen.hpp"
 #include "CppUTest/UtestMacros.h"
 #include "assert_expect.hpp"
+#include "mutex_intf_expect.hpp"
 #include "time_intf_expect.hpp"
 #include "nor_flash_file.hpp"
 
@@ -33,6 +35,7 @@ Static Data
 -----------------------------------------------------------------------------*/
 
 static fake::memory::nor::FileFlash *s_flash_0_driver;
+static int64_t                       s_last_micros = 0;
 
 extern "C"
 {
@@ -85,6 +88,7 @@ TEST_GROUP( tsdb_sink )
     flash_0_cfg.dev_attr.block_size = fdb_nor_flash0.blk_size;
     flash_0_cfg.dev_attr.size       = fdb_nor_flash0.len;
 
+    expect::mb$::osal$::createRecursiveMutex( IgnoreParameter(), true );
     std::remove( "flash_0_test.bin" );
     s_flash_0_driver->open( "flash_0_test.bin", flash_0_cfg );
 
@@ -117,6 +121,8 @@ TEST_GROUP( tsdb_sink )
 
 TEST( tsdb_sink, configure_with_invalid_arguments )
 {
+  expect::mb$::osal$::createRecursiveMutex( 3, IgnoreParameter(), true );
+
   test_sink = new mb::logging::TSDBSink();
   CHECK( test_sink != nullptr );
 
@@ -160,6 +166,8 @@ TEST( tsdb_sink, configure_with_invalid_arguments )
 
 TEST( tsdb_sink, configure_with_valid_arguments )
 {
+  expect::mb$::osal$::createRecursiveMutex( IgnoreParameter(), true );
+
   test_sink = new mb::logging::TSDBSink();
   CHECK( test_sink != nullptr );
 
@@ -181,6 +189,8 @@ TEST( tsdb_sink, configure_with_valid_arguments )
 
 TEST( tsdb_sink, close )
 {
+  expect::mb$::osal$::createRecursiveMutex( IgnoreParameter(), true );
+
   test_sink = new mb::logging::TSDBSink();
   CHECK( test_sink != nullptr );
 
@@ -212,6 +222,7 @@ TEST( tsdb_sink, flush )
   CHECK( test_sink != nullptr );
 
   mb::logging::TSDBSink::Config config;
+  expect::mb$::osal$::createRecursiveMutex( IgnoreParameter(), true );
 
   /*---------------------------------------------------------------------------
   Test Case: Flush before configuration
@@ -235,6 +246,8 @@ TEST( tsdb_sink, flush )
 
 TEST( tsdb_sink, insert_bad_args )
 {
+  expect::mb$::osal$::createRecursiveMutex( IgnoreParameter(), true );
+
   /*---------------------------------------------------------------------------
   Configure the sink
   ---------------------------------------------------------------------------*/
@@ -254,30 +267,32 @@ TEST( tsdb_sink, insert_bad_args )
   Test Case: Not enabled
   ---------------------------------------------------------------------------*/
   test_sink->enabled = false;
-  CHECK( test_sink->insert( mb::logging::Level::LVL_DEBUG, "hello", 5 ) == mb::logging::ErrCode::ERR_FAIL );
+  CHECK( test_sink->write( mb::logging::Level::LVL_DEBUG, "hello", 5 ) == mb::logging::ErrCode::ERR_FAIL );
 
   /*---------------------------------------------------------------------------
   Test Case: Log Level too high
   ---------------------------------------------------------------------------*/
   test_sink->enabled = true;
   test_sink->logLevel = mb::logging::Level::LVL_INFO;
-  CHECK( test_sink->insert( mb::logging::Level::LVL_DEBUG, "hello", 5 ) == mb::logging::ErrCode::ERR_FAIL );
+  CHECK( test_sink->write( mb::logging::Level::LVL_DEBUG, "hello", 5 ) == mb::logging::ErrCode::ERR_FAIL );
 
   /*-------------------------------------------------------------------------
   Test Case: Null message
   -------------------------------------------------------------------------*/
-  CHECK( test_sink->insert( mb::logging::Level::LVL_INFO, nullptr, 5 ) == mb::logging::ErrCode::ERR_FAIL );
+  CHECK( test_sink->write( mb::logging::Level::LVL_INFO, nullptr, 5 ) == mb::logging::ErrCode::ERR_FAIL );
 
   /*-------------------------------------------------------------------------
   Test Case: Zero length message
   -------------------------------------------------------------------------*/
-  CHECK( test_sink->insert( mb::logging::Level::LVL_INFO, "hello", 0 ) == mb::logging::ErrCode::ERR_FAIL );
+  CHECK( test_sink->write( mb::logging::Level::LVL_INFO, "hello", 0 ) == mb::logging::ErrCode::ERR_FAIL );
 
   delete test_sink;
 }
 
 TEST( tsdb_sink, insert_nominal )
 {
+  expect::mb$::osal$::createRecursiveMutex( IgnoreParameter(), true );
+
   /*---------------------------------------------------------------------------
   Configure the sink
   ---------------------------------------------------------------------------*/
@@ -298,14 +313,16 @@ TEST( tsdb_sink, insert_nominal )
   /*---------------------------------------------------------------------------
   Test Case: Valid message
   ---------------------------------------------------------------------------*/
-  expect::mb$::time$::micros( 5000 );
-  CHECK( test_sink->insert( mb::logging::Level::LVL_INFO, "hello", 5 ) == mb::logging::ErrCode::ERR_OK );
+  expect::mb$::time$::micros( s_last_micros );
+  s_last_micros += 1000;
+  CHECK( test_sink->write( mb::logging::Level::LVL_INFO, "hello", 5 ) == mb::logging::ErrCode::ERR_OK );
 
   /*---------------------------------------------------------------------------
   Test Case: Insert a second message
   ---------------------------------------------------------------------------*/
-  expect::mb$::time$::micros( 5001 );
-  CHECK( test_sink->insert( mb::logging::Level::LVL_INFO, "hello", 5 ) == mb::logging::ErrCode::ERR_OK );
+  expect::mb$::time$::micros( s_last_micros );
+  s_last_micros += 1000;
+  CHECK( test_sink->write( mb::logging::Level::LVL_INFO, "hello", 5 ) == mb::logging::ErrCode::ERR_OK );
 
   delete test_sink;
 }
@@ -359,6 +376,8 @@ static bool cb_simple_read_back_forward( const void *const message, const size_t
 
 TEST( tsdb_sink, simple_read_back )
 {
+  expect::mb$::osal$::createRecursiveMutex( IgnoreParameter(), true );
+
   /*---------------------------------------------------------------------------
   Configure the sink
   ---------------------------------------------------------------------------*/
@@ -376,16 +395,21 @@ TEST( tsdb_sink, simple_read_back )
   test_sink->logLevel = mb::logging::Level::LVL_INFO;
   CHECK( test_sink->open() == mb::logging::ErrCode::ERR_OK );
 
-  expect::mb$::time$::micros( 5000 );
-  CHECK( test_sink->insert( mb::logging::Level::LVL_INFO, "hello", 5 ) == mb::logging::ErrCode::ERR_OK );
-  expect::mb$::time$::micros( 6035 );
-  CHECK( test_sink->insert( mb::logging::Level::LVL_INFO, "goodbye", 8 ) == mb::logging::ErrCode::ERR_OK );
+  expect::mb$::time$::micros( s_last_micros );
+  s_last_micros += 1000;
+  expect::mb$::time$::micros( s_last_micros );
+  s_last_micros += 1000;
+  CHECK( test_sink->write( mb::logging::Level::LVL_INFO, "hello", 5 ) == mb::logging::ErrCode::ERR_OK );
+
+  expect::mb$::time$::micros( s_last_micros );
+  s_last_micros += 1000;
+  CHECK( test_sink->write( mb::logging::Level::LVL_INFO, "goodbye", 8 ) == mb::logging::ErrCode::ERR_OK );
 
   /*---------------------------------------------------------------------------
   Test Case: Read back all messages in reverse
   ---------------------------------------------------------------------------*/
   s_simple_read_back_count = 0;
-  auto cb1 = mb::logging::TSDBSink::LogReader::create<cb_simple_read_back_reverse>();
+  auto cb1 = mb::logging::LogReader::create<cb_simple_read_back_reverse>();
 
   test_sink->read( cb1, false );
   CHECK( s_simple_read_back_count == 2 );
@@ -394,7 +418,7 @@ TEST( tsdb_sink, simple_read_back )
   Test Case: Read back all messages forward
   ---------------------------------------------------------------------------*/
   s_simple_read_back_count = 0;
-  auto cb2 = mb::logging::TSDBSink::LogReader::create<cb_simple_read_back_forward>();
+  auto cb2 = mb::logging::LogReader::create<cb_simple_read_back_forward>();
 
   test_sink->read( cb2, true );
   CHECK( s_simple_read_back_count == 2 );
